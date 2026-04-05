@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent tooling files
+AGENTS.md
+CLAUDE.md
+.codex
+
+# local phase audit notes
+docs/phase-*-runtime-audit.md
