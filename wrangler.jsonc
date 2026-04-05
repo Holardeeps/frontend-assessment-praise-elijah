@@ -1,0 +1,38 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "trade-lens",
+  "compatibility_date": "2026-04-05",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  // This serves the adapted OpenNext static output through Wrangler so local
+  // preview and deployed assets resolve from the expected worker bundle.
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "services": [
+    {
+      // This self-reference binding is required by the adapter's caching flow,
+      // and the service name must match the worker name above.
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "trade-lens"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      // This bucket backs the incremental cache configured in
+      // open-next.config.ts, so both files need to stay in sync.
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "trade-lens-opennext-cache"
+    }
+  ],
+
+  "images": {
+    // This enables Cloudflare image optimization for Next image handling in
+    // the OpenNext worker runtime.
+    "binding": "IMAGES"
+  }
+}
