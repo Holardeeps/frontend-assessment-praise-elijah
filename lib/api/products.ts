@@ -4,7 +4,10 @@ import type {
   ProductCategoryList,
   ProductCategorySlug,
 } from "@/types/api";
-import type { Product } from "@/types/product";
+import { PRODUCT_SORT_OPTIONS, PRODUCTS_PER_PAGE } from "@/features/products/constants";
+import { buildPaginationMeta, type PaginationMeta } from "@/features/products/utils";
+import type { ProductQueryState, SortOption } from "@/types/filters";
+import type { Product, ProductListResponse } from "@/types/product";
 
 type ProductsApiSearchParams = Record<
   string,
@@ -23,7 +26,17 @@ type ProductsApiRequestOptions = {
   init?: ProductsApiFetchInit;
 };
 
+type ProductListRequestOptions = {
+  perPage?: number;
+  init?: ProductsApiFetchInit;
+};
+
 const DEFAULT_PRODUCTS_API_BASE_URL = "https://dummyjson.com";
+
+type ProductCollectionRoute = {
+  pathname: string;
+  searchParams?: ProductsApiSearchParams;
+};
 
 // This error shape preserves the HTTP status and URL so route-level error
 // handling can produce useful messages without losing the failing request context.
@@ -173,4 +186,309 @@ export async function getProductCategorySlugs(init?: ProductsApiFetchInit) {
   });
 
   return normalizeProductCategoryList(categories);
+}
+
+// This is the single listing entry point the products page will use next. It
+// chooses the narrowest available DummyJSON route, then either paginates
+// directly or falls back to server-side filtering when the API cannot express
+// the full query combination by itself.
+export async function getProductList(
+  query: ProductQueryState,
+  { perPage = PRODUCTS_PER_PAGE, init }: ProductListRequestOptions = {},
+): Promise<ProductListResponse> {
+  const strategy = determineListStrategy(query);
+
+  if (strategy.mode === "server-filtered") {
+    return getServerFilteredProductList(query, {
+      perPage,
+      baseRoute: strategy.baseRoute,
+      init,
+    });
+  }
+
+  return getDirectProductList(query, {
+    perPage,
+    baseRoute: strategy.baseRoute,
+    init,
+  });
+}
+
+type ListStrategy =
+  | {
+      mode: "direct";
+      baseRoute: ProductCollectionRoute;
+    }
+  | {
+      mode: "server-filtered";
+      baseRoute: ProductCollectionRoute;
+    };
+
+// The listing route can use direct API pagination for plain browse, search,
+// and category views. Price filters and mixed search+category queries need a
+// fetch-all fallback because DummyJSON does not expose that combination natively.
+function determineListStrategy(query: ProductQueryState): ListStrategy {
+  const hasSearch = query.search.length > 0;
+  const hasCategory = Boolean(query.category);
+  const hasPriceFilter = query.minPrice !== null || query.maxPrice !== null;
+
+  if (hasPriceFilter || (hasSearch && hasCategory)) {
+    return {
+      mode: "server-filtered",
+      baseRoute: buildNarrowestCollectionRoute(query, { fetchAll: true }),
+    };
+  }
+
+  return {
+    mode: "direct",
+    baseRoute: buildNarrowestCollectionRoute(query),
+  };
+}
+
+// This picks the best starting endpoint for the current query. Search is used
+// as the fallback "narrow" route for mixed search+category cases because it
+// usually shrinks the dataset more aggressively than a broad category list.
+function buildNarrowestCollectionRoute(
+  query: ProductQueryState,
+  options: { fetchAll?: boolean } = {},
+): ProductCollectionRoute {
+  const { fetchAll = false } = options;
+  const sortDefinition = getSortDefinition(query.sort);
+  const baseSearchParams = {
+    ...(fetchAll ? { limit: 0 } : {}),
+    ...(sortDefinition
+      ? { sortBy: sortDefinition.sortBy, order: sortDefinition.order }
+      : {}),
+  };
+
+  if (query.search) {
+    return {
+      pathname: "/products/search",
+      searchParams: {
+        q: query.search,
+        ...baseSearchParams,
+      },
+    };
+  }
+
+  if (query.category) {
+    return {
+      pathname: `/products/category/${query.category}`,
+      searchParams: baseSearchParams,
+    };
+  }
+
+  return {
+    pathname: "/products",
+    searchParams: baseSearchParams,
+  };
+}
+
+// This direct path is for the cases where DummyJSON can already represent the
+// requested view, so we can keep pagination work on the API instead of slicing
+// arrays in memory on the server.
+async function getDirectProductList(
+  query: ProductQueryState,
+  {
+    perPage,
+    baseRoute,
+    init,
+  }: {
+    perPage: number;
+    baseRoute: ProductCollectionRoute;
+    init?: ProductsApiFetchInit;
+  },
+): Promise<ProductListResponse> {
+  const initialResponse = await fetchProductCollection(baseRoute, {
+    limit: perPage,
+    skip: (query.page - 1) * perPage,
+    init,
+  });
+
+  const initialPagination = buildPaginationMeta({
+    currentPage: query.page,
+    totalItems: initialResponse.total,
+    perPage,
+  });
+
+  // If the requested page is out of range, we re-fetch the clamped page so the
+  // returned products and pagination meta always describe the same slice.
+  if (initialPagination.currentPage !== query.page) {
+    const correctedResponse = await fetchProductCollection(baseRoute, {
+      limit: perPage,
+      skip: initialPagination.offset,
+      init,
+    });
+
+    return buildProductListResponse({
+      query: {
+        ...query,
+        page: initialPagination.currentPage,
+      },
+      products: correctedResponse.products,
+      pagination: initialPagination,
+    });
+  }
+
+  return buildProductListResponse({
+    query,
+    products: initialResponse.products,
+    pagination: initialPagination,
+  });
+}
+
+// This fallback fetches the narrowest full collection we can get from
+// DummyJSON, then applies any remaining filters and sorting on the server.
+async function getServerFilteredProductList(
+  query: ProductQueryState,
+  {
+    perPage,
+    baseRoute,
+    init,
+  }: {
+    perPage: number;
+    baseRoute: ProductCollectionRoute;
+    init?: ProductsApiFetchInit;
+  },
+): Promise<ProductListResponse> {
+  const fullResponse = await fetchProductCollection(baseRoute, {
+    limit: 0,
+    skip: 0,
+    init,
+  });
+
+  const filteredProducts = applyServerSideFilters(fullResponse.products, query);
+  const sortedProducts = sortProducts(filteredProducts, query.sort);
+  const pagination = buildPaginationMeta({
+    currentPage: query.page,
+    totalItems: sortedProducts.length,
+    perPage,
+  });
+  const pageProducts = sortedProducts.slice(
+    pagination.offset,
+    pagination.offset + pagination.perPage,
+  );
+
+  return buildProductListResponse({
+    query: {
+      ...query,
+      page: pagination.currentPage,
+    },
+    products: pageProducts,
+    pagination,
+  });
+}
+
+// This wraps the common collection fetch shape used by browse, search, and
+// category routes so the direct and fallback strategies can share one client path.
+async function fetchProductCollection(
+  baseRoute: ProductCollectionRoute,
+  {
+    limit,
+    skip,
+    init,
+  }: {
+    limit: number;
+    skip: number;
+    init?: ProductsApiFetchInit;
+  },
+) {
+  const response = await fetchProductsApi<DummyJsonProductsResponse>(baseRoute.pathname, {
+    searchParams: {
+      ...baseRoute.searchParams,
+      limit,
+      skip,
+    },
+    init,
+  });
+
+  return normalizeProductsResponse(response);
+}
+
+function getSortDefinition(sort: SortOption | null) {
+  if (!sort) {
+    return null;
+  }
+
+  return PRODUCT_SORT_OPTIONS.find((option) => option.value === sort) ?? null;
+}
+
+// Search text and category are only applied here when the fallback route could
+// not express them directly, which avoids redundant filtering for simpler cases.
+function applyServerSideFilters(products: Product[], query: ProductQueryState) {
+  return products.filter((product) => {
+    if (query.category && product.category !== query.category) {
+      return false;
+    }
+
+    if (
+      query.search &&
+      !`${product.title} ${product.description} ${product.brand ?? ""}`
+        .toLowerCase()
+        .includes(query.search.toLowerCase())
+    ) {
+      return false;
+    }
+
+    if (query.minPrice !== null && product.price < query.minPrice) {
+      return false;
+    }
+
+    if (query.maxPrice !== null && product.price > query.maxPrice) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+// DummyJSON can sort directly for simple list modes, but the fallback path
+// needs the same order reproduced on the server after filtering has happened.
+function sortProducts(products: Product[], sort: SortOption | null) {
+  if (!sort) {
+    return products;
+  }
+
+  const sortedProducts = [...products];
+
+  sortedProducts.sort((leftProduct, rightProduct) => {
+    switch (sort) {
+      case "title-asc":
+        return leftProduct.title.localeCompare(rightProduct.title);
+      case "title-desc":
+        return rightProduct.title.localeCompare(leftProduct.title);
+      case "price-asc":
+        return leftProduct.price - rightProduct.price;
+      case "price-desc":
+        return rightProduct.price - leftProduct.price;
+      case "rating-asc":
+        return leftProduct.rating - rightProduct.rating;
+      case "rating-desc":
+        return rightProduct.rating - leftProduct.rating;
+      default:
+        return 0;
+    }
+  });
+
+  return sortedProducts;
+}
+
+function buildProductListResponse({
+  query,
+  products,
+  pagination,
+}: {
+  query: ProductQueryState;
+  products: Product[];
+  pagination: PaginationMeta;
+}): ProductListResponse {
+  return {
+    products,
+    total: pagination.totalItems,
+    page: pagination.currentPage,
+    perPage: pagination.perPage,
+    totalPages: pagination.totalPages,
+    hasNextPage: pagination.hasNextPage,
+    hasPreviousPage: pagination.hasPreviousPage,
+    query,
+  };
 }

@@ -9,9 +9,18 @@ type NavItem = {
 
 type NavBarProps = {
   items: NavItem[];
+  cta?: {
+    href: string;
+    label: string;
+  };
 };
 
-export function NavBar({ items }: NavBarProps) {
+const defaultCta = {
+  href: "#results",
+  label: "View results",
+};
+
+export function NavBar({ items, cta = defaultCta }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // This keeps menu interactions predictable on mobile by letting every link
@@ -49,8 +58,8 @@ export function NavBar({ items }: NavBarProps) {
               ))}
             </nav>
 
-            <a href="#product-preview" className="button-primary">
-              View preview
+            <a href={cta.href} className="button-primary">
+              {cta.label}
             </a>
           </div>
 
@@ -109,11 +118,11 @@ export function NavBar({ items }: NavBarProps) {
               ))}
 
               <a
-                href="#product-preview"
+                href={cta.href}
                 className="button-primary mt-2 w-full"
                 onClick={closeMenu}
               >
-                View preview
+                {cta.label}
               </a>
             </nav>
           </div>

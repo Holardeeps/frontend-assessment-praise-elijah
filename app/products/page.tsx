@@ -1,193 +1,280 @@
+import { PRODUCTS_PER_PAGE } from "@/features/products/constants";
+import {
+  parseProductQuery,
+  toProductSearchParams,
+} from "@/features/products/utils";
+import { getProductCategories, getProductList } from "@/lib/api/products";
 import { NavBar } from "@/components/shared/nav-bar";
 
-// These nav items make the temporary products shell feel like a real route
-// while we prepare the data-driven listing in the next feature phases.
+// These nav items now point at real sections on the server-rendered listing
+// route so the page feels like a working product surface instead of a mock shell.
 const navItems = [
   { label: "Overview", href: "#overview" },
-  { label: "Workflow", href: "#workflow" },
-  { label: "Preview", href: "#product-preview" },
+  { label: "Results", href: "#results" },
+  { label: "Categories", href: "#categories" },
 ];
 
-// These feature points explain the kind of browsing flow this route will grow
-// into once the real API integration, pagination, and filters are added.
-const heroFeatures = [
-  {
-    title: "Search faster",
-    description: "Find products by name, category, and commercial signals in one flow.",
-  },
-  {
-    title: "Filter clearly",
-    description: "Use category, price, and sort controls without losing shareable state.",
-  },
-  {
-    title: "Inspect deeply",
-    description: "Open server-rendered product detail pages with the context teams need.",
-  },
-];
+// These small helpers keep formatting logic out of the JSX so the route stays
+// readable while still showing real server-fetched data in a polished way.
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 2,
+});
 
-// This preview data gives the temporary route a believable product shell
-// without pretending that the real server-driven data layer already exists.
-const previewProducts = [
-  {
-    name: "Cold Chain Sentinel",
-    category: "Monitoring",
-    price: "$249",
-    stock: "In stock",
-    rating: "4.8",
-  },
-  {
-    name: "Retail Shelf Beacon",
-    category: "Operations",
-    price: "$139",
-    stock: "Low stock",
-    rating: "4.6",
-  },
-];
+const integerFormatter = new Intl.NumberFormat("en-US");
 
-const previewFilters = ["Monitoring", "Under $300", "Top rated"];
+function formatCurrency(value: number) {
+  return currencyFormatter.format(value);
+}
 
-const previewSummary = [
-  { label: "Products", value: "1,284" },
-  { label: "Categories", value: "14" },
-  { label: "Visible stock", value: "92%" },
-];
+function formatInteger(value: number) {
+  return integerFormatter.format(value);
+}
 
-export default function ProductsPage() {
+function getQuerySummary(queryString: string) {
+  return queryString.length > 0 ? `?${queryString}` : "Base catalog view";
+}
+
+type ProductsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ProductsPage({
+  searchParams,
+}: ProductsPageProps) {
+  const query = await parseProductQuery(searchParams);
+  const [productList, categories] = await Promise.all([
+    getProductList(query),
+    getProductCategories(),
+  ]);
+  const queryString = new URLSearchParams(
+    toProductSearchParams(productList.query),
+  ).toString();
+  const averageRating =
+    productList.products.length > 0
+      ? (
+          productList.products.reduce(
+            (total, product) => total + product.rating,
+            0,
+          ) / productList.products.length
+        ).toFixed(1)
+      : "0.0";
+
   return (
     <main className="pb-12 sm:pb-16">
       <section>
         <div className="w-full">
-          <NavBar items={navItems} />
+          <NavBar
+            items={navItems}
+            cta={{ href: "#results", label: "View results" }}
+          />
 
-          {/* This route shell is intentionally presentation-first for now,
-          giving the redirect a valid landing page while we build the real listing. */}
-          <div
-            id="overview"
-            className="grid items-start gap-8 px-5 pt-10 sm:px-7 sm:pt-12 lg:grid-cols-[minmax(0,1.02fr)_minmax(20rem,0.98fr)] lg:px-10 lg:gap-10"
-          >
-            <section className="animate-reveal">
+          {/* This is the first real server-rendered listing route, so the top
+          section explains the live state currently driving the catalog below. */}
+          <div id="overview" className="px-5 pt-10 sm:px-7 sm:pt-12 lg:px-10">
+            <section className="animate-reveal max-w-4xl">
               <span className="eyebrow">Commerce Discovery</span>
 
-              <div className="mt-6 max-w-3xl">
+              <div className="mt-6">
                 <h1 className="max-w-4xl text-balance">
-                  See your product catalog the way an operations team needs it.
+                  Browse a live product catalog with server-rendered results.
                 </h1>
-                <p className="mt-5 max-w-2xl text-base/8 text-[var(--copy-soft)] sm:text-lg/8">
-                  TradeLens is a clean product explorer for browsing catalog
-                  items, narrowing results quickly, and opening the detail that
-                  matters without losing context.
+                <p className="mt-5 max-w-2xl text-base/8 text-copy-soft sm:text-lg/8">
+                  TradeLens now reads the URL, parses the active query on the
+                  server, and renders real product data from DummyJSON through a
+                  shared API layer.
                 </p>
               </div>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <a href="#product-preview" className="button-primary">
-                  See the product view
+                <a href="#results" className="button-primary">
+                  Jump to results
                 </a>
-                <a href="#workflow" className="button-secondary">
-                  Explore the workflow
+                <a href="#categories" className="button-secondary">
+                  See categories
                 </a>
               </div>
 
-              {/* This compact feature row keeps the shell useful for demos and
-              review, while we defer the real listing implementation to the next phase. */}
-              <div id="workflow" className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {heroFeatures.map((feature) => (
-                  <article
-                    key={feature.title}
-                    className="rounded-[var(--radius-md)] border border-[var(--line-soft)] bg-[var(--surface-muted)] px-4 py-4"
-                  >
-                    <h2 className="text-[1.05rem]">{feature.title}</h2>
-                    <p className="mt-3 text-sm leading-6 text-[var(--copy-soft)]">
-                      {feature.description}
-                    </p>
-                  </article>
-                ))}
+              {/* This summary strip makes the active dataset visible now, even
+              before the dedicated filter bar and polished listing UI land later. */}
+              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <article className="rounded-md border border-(--line-soft) bg-panel-soft px-4 py-4">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                    Total results
+                  </p>
+                  <h2 className="mt-3 text-[1.9rem]">
+                    {formatInteger(productList.total)}
+                  </h2>
+                </article>
+
+                <article className="rounded-md border border-(--line-soft) bg-panel-soft px-4 py-4">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                    Current page
+                  </p>
+                  <h2 className="mt-3 text-[1.9rem]">
+                    {productList.page}/{Math.max(productList.totalPages, 1)}
+                  </h2>
+                </article>
+
+                <article className="rounded-md border border-(--line-soft) bg-panel-soft px-4 py-4">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                    Avg rating
+                  </p>
+                  <h2 className="mt-3 text-[1.9rem]">{averageRating}</h2>
+                </article>
+
+                <article className="rounded-md border border-(--line-soft) bg-panel-soft px-4 py-4">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                    Per page
+                  </p>
+                  <h2 className="mt-3 text-[1.9rem]">{PRODUCTS_PER_PAGE}</h2>
+                </article>
+              </div>
+
+              <div className="mt-6 rounded-md border border-(--line-soft) bg-white px-4 py-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                  Active query
+                </p>
+                <p className="mt-3 break-all text-sm leading-6 text-ink">
+                  {getQuerySummary(queryString)}
+                </p>
+              </div>
+            </section>
+          </div>
+
+          <div className="grid items-start gap-8 px-5 pt-8 sm:px-7 lg:grid-cols-[minmax(0,1fr)_22rem] lg:px-10 lg:gap-10">
+            {/* This results block intentionally stays straightforward for now:
+            real data first, then the polished product-card and filter UI later. */}
+            <section
+              id="results"
+              className="animate-reveal [animation-delay:120ms]"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copy-soft">
+                    Results
+                  </p>
+                  <h2 className="mt-2 text-[1.45rem]">
+                    Live products from the shared API layer
+                  </h2>
+                </div>
+                <p className="text-sm leading-6 text-copy-soft">
+                  Showing {productList.products.length} products on this page
+                  out of {formatInteger(productList.total)} total matches.
+                </p>
+              </div>
+
+              {productList.products.length > 0 ? (
+                <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {productList.products.map((product) => (
+                    <article
+                      key={product.id}
+                      className="rounded-md border border-(--line-soft) bg-white px-4 py-4 shadow-(--shadow-card)"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-(--brand-cyan-deep)">
+                            {product.category}
+                          </p>
+                          <h3 className="mt-2 text-[1.15rem] text-ink">
+                            {product.title}
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-copy-soft">
+                            {product.description}
+                          </p>
+                        </div>
+
+                        <div className="rounded-full border border-(--line-soft) bg-panel-soft px-3 py-2 text-sm font-semibold text-ink">
+                          {product.rating.toFixed(1)}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="pill bg-panel-soft px-3 py-2 text-sm">
+                          {formatCurrency(product.price)}
+                        </span>
+                        <span className="pill bg-panel-soft px-3 py-2 text-sm">
+                          Stock {formatInteger(product.stock)}
+                        </span>
+                        {product.brand ? (
+                          <span className="pill bg-panel-soft px-3 py-2 text-sm">
+                            {product.brand}
+                          </span>
+                        ) : null}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-6 rounded-lg border border-dashed border-(--line-strong) bg-panel-soft px-5 py-10 text-center">
+                  <h3>No products matched this query.</h3>
+                  <p className="mt-3 text-sm leading-6 text-copy-soft">
+                    This simple empty state confirms the server query ran
+                    correctly. The dedicated empty-state design and retry flow
+                    will be polished in a later phase.
+                  </p>
+                </div>
+              )}
+
+              <div className="mt-6 rounded-md border border-(--line-soft) bg-panel-soft px-4 py-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                  Pagination snapshot
+                </p>
+                <p className="mt-3 text-sm leading-6 text-ink">
+                  Page {productList.page} of{" "}
+                  {Math.max(productList.totalPages, 1)}.
+                  {productList.hasPreviousPage
+                    ? " Previous page available."
+                    : " At first page."}
+                  {productList.hasNextPage
+                    ? " Next page available."
+                    : " At last page."}
+                </p>
               </div>
             </section>
 
-            {/* This mock panel stays as the temporary visual anchor for the
-            products route until the server-driven listing cards replace it. */}
+            {/* This side panel proves categories and active state are already
+            available on the server before we build the dedicated filter UI. */}
             <aside
-              id="product-preview"
-              className="surface-card surface-card-dark animate-reveal px-4 py-4 sm:px-5 sm:py-5 [animation-delay:120ms]"
+              id="categories"
+              className="surface-card animate-reveal px-4 py-4 sm:px-5 sm:py-5 [animation-delay:180ms]"
             >
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/62">
-                    Preview
-                  </p>
-                  <h2 className="mt-2 text-[1.45rem] text-white">
-                    Filterable catalog
-                  </h2>
-                </div>
-                <span className="rounded-full border border-white/12 bg-white/8 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/78">
-                  Listing
-                </span>
-              </div>
-
-              <div className="mt-5 rounded-[var(--radius-md)] border border-white/12 bg-white px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--copy-soft)]">
-                  Search products
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copy-soft">
+                  Categories
                 </p>
-                <p className="mt-2 text-sm text-[var(--brand-ink)]">
-                  smart sensor monitor
+                <h2 className="mt-2 text-[1.45rem]">Available filters</h2>
+                <p className="mt-3 text-sm leading-6 text-copy-soft">
+                  {formatInteger(categories.length)} categories are already
+                  available for the upcoming filter bar.
                 </p>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {previewFilters.map((filter) => (
-                  <span key={filter} className="preview-chip">
-                    {filter}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-5 grid gap-3">
-                {previewProducts.map((product) => (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {categories.slice(0, 12).map((category) => (
                   <article
-                    key={product.name}
-                    className="rounded-[var(--radius-md)] border border-white/10 bg-white px-4 py-4"
+                    key={category.slug}
+                    className="pill bg-panel-soft px-3 py-2 text-sm"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-cyan-deep)]">
-                          {product.category}
-                        </p>
-                        <h3 className="mt-2 text-[1.15rem] text-[var(--brand-ink)]">
-                          {product.name}
-                        </h3>
-                      </div>
-                      <div className="rounded-full border border-[var(--line-soft)] bg-[var(--surface-muted)] px-3 py-2 text-sm font-semibold text-[var(--brand-ink)]">
-                        {product.rating}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <span className="pill bg-[var(--surface-muted)] px-3 py-2 text-sm">
-                        {product.price}
-                      </span>
-                      <span className="pill bg-[var(--surface-muted)] px-3 py-2 text-sm">
-                        {product.stock}
-                      </span>
-                    </div>
+                    {category.name}
                   </article>
                 ))}
               </div>
 
-              <div className="mt-5 grid grid-cols-3 gap-3">
-                {previewSummary.map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-[var(--radius-md)] border border-white/10 bg-white/8 px-3 py-3 text-center"
-                  >
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-white/60">
-                      {item.label}
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-white">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
+              <div className="mt-6 rounded-md border border-(--line-soft) bg-panel-soft px-4 py-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
+                  Current state
+                </p>
+                <p className="mt-3 text-sm leading-6 text-ink">
+                  Search: {productList.query.search || "none"}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-ink">
+                  Category: {productList.query.category || "all"}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-ink">
+                  Sort: {productList.query.sort || "default"}
+                </p>
               </div>
             </aside>
           </div>
