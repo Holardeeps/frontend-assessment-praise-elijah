@@ -8,6 +8,7 @@ state, server-rendered detail pages, and resilient handling of upstream
 slowdowns.
 
 Live URL: https://trade-lens.holardeeps.workers.dev
+Repository URL: https://github.com/Holardeeps/frontend-assessment-praise-elijah
 
 ## What It Includes
 
