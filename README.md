@@ -21,6 +21,7 @@ TradeLens is a product catalog explorer built with Next.js, TypeScript, Tailwind
 - catalog cards now include live product imagery with graceful fallback
 - numbered pagination plus previous / next navigation is working
 - loading, error, and empty states are now in place for `/products`
+- the main catalog and detail flows have now had an accessibility-focused pass
 - Vitest + React Testing Library are set up and running
 
 ## Run Locally
@@ -75,6 +76,30 @@ tests/
 types/
 ```
 
+## Accessibility QA
+
+Current verified coverage:
+
+- a keyboard-only skip link now jumps past the sticky nav to the main content
+- `/products` and `/products/[id]` now have clearer landmark and heading structure
+- filter inputs, pagination controls, view toggles, recent-search chips, and card links now expose stronger accessible names
+- the mobile filter drawer traps focus correctly, closes on `Escape`, and returns focus to its trigger
+- the mobile nav and custom select menus now have stronger keyboard and focus behavior
+- results and filter summaries now use polite live status messaging where appropriate
+- reduced-motion handling and helper-text contrast were tightened during the accessibility pass
+
+Current automated verification:
+
+- `10` Vitest files
+- `22` passing tests
+- focused regression coverage now includes drawer focus behavior, dropdown keyboard navigation, and mobile-nav focus return
+
+Still best checked manually in the browser:
+
+- a full keyboard sweep on `/products` and `/products/[id]`
+- a quick Lighthouse accessibility pass
+- a final screen-reader spot check for the filter drawer, custom dropdown, and pagination announcements
+
 ## Cache Strategy
 
 - Product listing data uses `cache: "force-cache"` with `next.revalidate = 180` so the catalog stays reasonably fresh without making every request fully dynamic.
@@ -93,5 +118,5 @@ types/
 ## Notes
 
 - The product data depends on an external API, so occasional upstream slowdowns can still happen during development.
-- The `/products` route now fails more gracefully with retries, timeouts, and product-facing fallback states.
+- The `/products` route now fails more gracefully with retries, timeouts, a short stale-response fallback for transient upstream errors, and product-facing fallback states.
 - Deployment and final assessment notes will be added once the app is feature-complete.

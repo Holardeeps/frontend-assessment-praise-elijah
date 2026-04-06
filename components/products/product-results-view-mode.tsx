@@ -1,20 +1,26 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect } from "react";
 
 import { useUiStore } from "@/store/use-ui-store";
 
 import { ProductViewModeToggle } from "./product-view-mode-toggle";
 
-type ProductResultsViewportProps = {
-  children: ReactNode;
-};
+export const PRODUCT_RESULTS_GRID_ID = "products-results-grid";
 
-export function ProductResultsViewport({
-  children,
-}: ProductResultsViewportProps) {
+export function ProductResultsViewMode() {
   const viewMode = useUiStore((state) => state.viewMode);
   const setViewMode = useUiStore((state) => state.setViewMode);
+
+  useEffect(() => {
+    const resultsGrid = document.getElementById(PRODUCT_RESULTS_GRID_ID);
+
+    if (!resultsGrid) {
+      return;
+    }
+
+    resultsGrid.setAttribute("data-view-mode", viewMode);
+  }, [viewMode]);
 
   return (
     <div className="mt-6 space-y-4">
@@ -24,18 +30,6 @@ export function ProductResultsViewport({
         </p>
 
         <ProductViewModeToggle viewMode={viewMode} onChange={setViewMode} />
-      </div>
-
-      <div
-        data-view-mode={viewMode}
-        className={[
-          "products-grid",
-          viewMode === "compact"
-            ? "products-grid-compact"
-            : "products-grid-default",
-        ].join(" ")}
-      >
-        {children}
       </div>
     </div>
   );

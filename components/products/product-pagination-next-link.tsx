@@ -17,6 +17,8 @@ export function ProductPaginationNextLink({
   query,
 }: ProductPaginationNextLinkProps) {
   const queryClient = useQueryClient();
+  const className =
+    "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-cyan px-0 text-sm font-semibold uppercase tracking-wide text-navy shadow-panel transition-colors duration-150 ease-fluid hover:bg-navy hover:text-white sm:min-h-12 sm:min-w-35 sm:px-4";
 
   const prefetchNextPage = () => {
     // This prefetch only runs when someone shows intent to continue paging, so
@@ -32,10 +34,12 @@ export function ProductPaginationNextLink({
   return (
     <Link
       href={href}
+      prefetch={false}
+      scroll={false}
       onMouseEnter={prefetchNextPage}
       onFocus={prefetchNextPage}
       aria-label="Go to next page"
-      className="button-primary min-h-11 min-w-11 px-0 sm:min-h-12 sm:min-w-35 sm:px-4"
+      className={className}
     >
       <span aria-hidden="true" className="text-base sm:hidden">
         →

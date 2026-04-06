@@ -20,6 +20,7 @@ export function ProductCard({ product, href }: ProductCardProps) {
           real catalog surface and preserves the current result context. */}
       <Link
         href={href}
+        prefetch={false}
         aria-label={`View details for ${product.title}`}
         className="product-card-link block h-full rounded-panel-lg focus-visible:outline-none"
       >

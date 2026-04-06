@@ -1,9 +1,7 @@
-"use client";
-
 import Image from "next/image";
-import { useState } from "react";
 
 import { formatCategoryLabel } from "@/features/products/utils/format-category-label";
+import { shouldBypassNextImageOptimization } from "@/lib/utils/should-bypass-next-image-optimization";
 
 type ProductCardImageProps = {
   imageUrl: string;
@@ -16,8 +14,8 @@ export function ProductCardImage({
   title,
   category,
 }: ProductCardImageProps) {
-  const [hasImageError, setHasImageError] = useState(false);
-  const shouldShowFallback = hasImageError || imageUrl.trim().length === 0;
+  const shouldShowFallback = imageUrl.trim().length === 0;
+  const bypassOptimization = shouldBypassNextImageOptimization(imageUrl);
 
   return (
     <div className="product-card-image-shell relative aspect-4/3 overflow-hidden rounded-panel-md border border-line-soft bg-panel-soft">
@@ -41,9 +39,9 @@ export function ProductCardImage({
           src={imageUrl}
           alt={title}
           fill
-          sizes="(min-width: 1280px) 28rem, (min-width: 768px) 45vw, 100vw"
+          unoptimized={bypassOptimization}
+          sizes="(min-width: 1140px) 26rem, (min-width: 768px) 42vw, 92vw"
           className="object-cover transition-transform duration-200 ease-fluid hover:scale-[1.02]"
-          onError={() => setHasImageError(true)}
         />
       )}
     </div>

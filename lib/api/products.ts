@@ -37,9 +37,18 @@ const DEFAULT_PRODUCTS_API_BASE_URL = "https://dummyjson.com";
 const DEFAULT_PRODUCTS_API_RETRIES = 2;
 const DEFAULT_PRODUCTS_API_RETRY_DELAY_MS = 300;
 const DEFAULT_PRODUCTS_API_TIMEOUT_MS = 5000;
+const PRODUCTS_STALE_RESPONSE_MAX_AGE_MS = 60 * 60 * 1000;
 const PRODUCT_LIST_REVALIDATE_SECONDS = 180;
 const PRODUCT_DETAIL_REVALIDATE_SECONDS = 180;
 const PRODUCT_CATEGORIES_REVALIDATE_SECONDS = 3600;
+
+const productsApiStaleResponseCache = new Map<
+  string,
+  {
+    cachedAt: number;
+    data: unknown;
+  }
+>();
 
 type ProductsApiCachePolicy = {
   cache: "force-cache";
@@ -201,6 +210,28 @@ function waitForProductsApiRetry(delayMs: number) {
   });
 }
 
+function getCachedProductsApiResponse<TResponse>(url: string) {
+  const cachedEntry = productsApiStaleResponseCache.get(url);
+
+  if (!cachedEntry) {
+    return null;
+  }
+
+  if (Date.now() - cachedEntry.cachedAt > PRODUCTS_STALE_RESPONSE_MAX_AGE_MS) {
+    productsApiStaleResponseCache.delete(url);
+    return null;
+  }
+
+  return cachedEntry.data as TResponse;
+}
+
+function setCachedProductsApiResponse(url: string, data: unknown) {
+  productsApiStaleResponseCache.set(url, {
+    cachedAt: Date.now(),
+    data: structuredClone(data),
+  });
+}
+
 function createProductsTimeoutError(timeoutMs: number) {
   const timeoutError = new Error(
     `The product service did not respond within ${timeoutMs}ms.`,
@@ -303,11 +334,25 @@ export async function fetchProductsApi<TResponse>(
         });
       }
 
-      return (await response.json()) as TResponse;
+      const payload = (await response.json()) as TResponse;
+      setCachedProductsApiResponse(url.toString(), payload);
+
+      return payload;
     } catch (error) {
+      const canUseStaleResponse = isRetryableProductsApiError(error);
       const isLastAttempt = attempt === retries;
 
-      if (isLastAttempt || !isRetryableProductsApiError(error)) {
+      if (isLastAttempt || !canUseStaleResponse) {
+        if (canUseStaleResponse) {
+          const cachedResponse = getCachedProductsApiResponse<TResponse>(
+            url.toString(),
+          );
+
+          if (cachedResponse !== null) {
+            return cachedResponse;
+          }
+        }
+
         if (error instanceof ProductsApiError) {
           throw error;
         }

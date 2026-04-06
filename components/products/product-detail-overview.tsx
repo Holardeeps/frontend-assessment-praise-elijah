@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { formatCategoryLabel } from "@/features/products/utils";
 import { formatCurrency, formatInteger } from "@/lib/utils/format-number";
+import { shouldBypassNextImageOptimization } from "@/lib/utils/should-bypass-next-image-optimization";
 import type { ProductDetailModel } from "@/types/product";
 
 import { ProductBreadcrumb } from "./product-breadcrumb";
@@ -14,6 +15,7 @@ export function ProductDetailOverview({
   product,
 }: ProductDetailOverviewProps) {
   const primaryImage = product.images[0] || product.thumbnail;
+  const bypassOptimization = shouldBypassNextImageOptimization(primaryImage);
 
   return (
     <section aria-labelledby="product-detail-title" className="space-y-5">
@@ -35,6 +37,7 @@ export function ProductDetailOverview({
                   alt={product.title}
                   fill
                   priority
+                  unoptimized={bypassOptimization}
                   sizes="(max-width: 1023px) 100vw, 44vw"
                   className="object-cover"
                 />

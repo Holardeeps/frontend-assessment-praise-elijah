@@ -5,6 +5,14 @@ fix applied. Update this file whenever a real testing issue is found.
 
 ## Current Notes
 
+- Responsive pagination layout:
+  On mobile and small tablet widths, the pagination actions could wrap into an
+  awkward layout where the next button dropped out of alignment and the page
+  pills felt cramped.
+  Fix: rebuilt the controls as a responsive grid with icon-only edge actions on
+  narrow mobile, full text controls from the wider breakpoint, and a smoother
+  hash-based results scroll after page changes.
+
 - Large-screen filter layout:
   Above wide laptop and desktop widths, the `Refine results` section left an
   awkward blank area because the price card made the whole grid row taller than
@@ -17,6 +25,14 @@ fix applied. Update this file whenever a real testing issue is found.
   runtime error.
   Fix: added fetch retries, explicit per-request timeouts, time-based
   revalidation, and a friendly service unavailable state for listing failures.
+
+- Product image optimization timeouts:
+  Next.js could still log raw `fetch failed` errors after `/products` finished
+  rendering because the image optimizer was proxying DummyJSON-hosted product
+  images through the server.
+  Fix: bypassed Next image optimization for `dummyjson.com` and
+  `*.dummyjson.com` product images so the browser requests them directly while
+  the existing UI fallback still handles broken images.
 
 - Filter rerender loop:
   The price filter could keep triggering route replacement even when the

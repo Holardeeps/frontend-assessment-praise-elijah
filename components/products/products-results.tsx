@@ -5,7 +5,11 @@ import { formatInteger } from "@/lib/utils/format-number";
 import { ProductCard } from "./product-card";
 import { ProductsEmptyState } from "./products-empty-state";
 import { ProductPagination } from "./product-pagination";
-import { ProductResultsViewport } from "./product-results-viewport";
+import { ProductResultsScrollSync } from "./product-results-scroll-sync";
+import {
+  ProductResultsViewMode,
+  PRODUCT_RESULTS_GRID_ID,
+} from "./product-results-view-mode";
 
 type ProductsResultsProps = {
   productList: ProductListResponse;
@@ -18,6 +22,8 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
       aria-labelledby="results-title"
       className="animate-reveal animate-reveal-delayed scroll-mt-36"
     >
+      <ProductResultsScrollSync />
+
       <div className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -40,15 +46,23 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
         </div>
 
         {productList.products.length > 0 ? (
-          <ProductResultsViewport>
-            {productList.products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                href={buildProductDetailHref(product.id, productList.query)}
-              />
-            ))}
-          </ProductResultsViewport>
+          <>
+            <ProductResultsViewMode />
+
+            <div
+              id={PRODUCT_RESULTS_GRID_ID}
+              data-view-mode="grid"
+              className="products-grid"
+            >
+              {productList.products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  href={buildProductDetailHref(product.id, productList.query)}
+                />
+              ))}
+            </div>
+          </>
         ) : (
           <ProductsEmptyState query={productList.query} />
         )}
