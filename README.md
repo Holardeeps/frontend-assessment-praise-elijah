@@ -1,28 +1,24 @@
 # TradeLens
 
-TradeLens is a product catalog explorer built with Next.js, TypeScript, Tailwind CSS, and Cloudflare/OpenNext. It is currently in active build for a frontend assessment and is not live yet.
+TradeLens is a performance-focused product catalog explorer built with Next.js
+App Router, TypeScript, Tailwind CSS, and Cloudflare/OpenNext. It uses the
+DummyJSON products API as a mock catalog source and is structured to feel like
+a lightweight commerce discovery surface: fast listing pages, shareable filter
+state, server-rendered detail pages, and resilient handling of upstream
+slowdowns.
 
-## Current Status
+Live URL: add after Cloudflare deployment.
 
-- `/` redirects to `/products`
-- `/products` is server-rendered and fetches live product data
-- `/products/[id]` now has a working detail route foundation
-- product detail pages now include dynamic metadata and breadcrumb navigation
-- related products now stream into the detail page behind a Suspense fallback
-- related products now hydrate into TanStack Query so repeat detail views can reuse that client cache
-- an internal products JSON route now exists for client-side catalog enhancements
-- an internal related-products JSON route now exists for client-side enhancements
-- the pagination next button now warms the next catalog page through TanStack Query on hover or focus
-- the catalog results page now supports a persisted grid / compact view mode
-- recent searches are now saved locally and can be reused from the filter bar
-- Cloudflare static asset headers now mark `/_next/static/*` as immutable for one year
-- the Cloudflare runtime now includes a durable revalidation queue for time-based cache refreshes
-- URL query state already supports search, category, price, sort, and page parsing
-- catalog cards now include live product imagery with graceful fallback
-- numbered pagination plus previous / next navigation is working
-- loading, error, and empty states are now in place for `/products`
-- the main catalog and detail flows have now had an accessibility-focused pass
-- Vitest + React Testing Library are set up and running
+## What It Includes
+
+- `/products` server-rendered listing page with `24` items per page
+- responsive card grid with image, title, brand, price, stock, and rating
+- URL-driven search, category, price, sort, and pagination state
+- `/products/[id]` dynamic detail route with metadata and breadcrumb navigation
+- streamed related products with Suspense
+- loading, error, unavailable, and empty states
+- persisted UI-only state for compact/grid view, recent searches, and mobile
+  filter drawer behavior
 
 ## Run Locally
 
@@ -34,34 +30,171 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-For a Cloudflare-style local preview:
+Useful scripts:
 
 ```bash
-npm run preview
-```
-
-Open `http://localhost:8787`.
-
-## Useful Scripts
-
-```bash
-npm run dev
-npm run test -- --run
 npm run lint
+npx tsc --noEmit
+npm run test -- --run
 npm run build
+npm run start
 npm run preview
 ```
 
 ## Environment
 
-The repo includes [.env.example](/trade-lens/.env.example).
+The repo includes [.env.example](./.env.example).
 
-Current keys:
+Available variables:
 
 - `NEXT_PUBLIC_SITE_URL`
 - `PRODUCTS_API_BASE_URL`
+- `BYPASS_REMOTE_IMAGE_OPTIMIZATION`
 
-The app currently falls back to DummyJSON if `PRODUCTS_API_BASE_URL` is not set.
+Notes:
+
+- no API key is required
+- no separate backend service is required
+- if `PRODUCTS_API_BASE_URL` is unset, the app falls back to DummyJSON
+- `BYPASS_REMOTE_IMAGE_OPTIMIZATION` is optional and mainly useful for noisy
+  local preview/debug sessions
+
+## Architecture Decisions
+
+- Server Components are the default for catalog and detail pages so the main
+  data-heavy surfaces stay mostly server-rendered.
+- URL state is the source of truth for listing state. Search, category, price,
+  sort, and page all resolve from the URL rather than being duplicated in a
+  global client store.
+- Pagination was chosen over infinite scroll because it is more cacheable,
+  easier to share, and easier to verify deterministically during QA.
+- Zustand is limited to UI-only state: mobile filter drawer, persisted view
+  mode, and recent searches.
+- TanStack Query is used only for enhancement paths, not as the primary data
+  source for the catalog. It powers related-products cache hydration and
+  next-page prefetching.
+- All external data access is centralized in [lib/api/products.ts](./lib/api/products.ts)
+  so components do not call `fetch()` directly.
+
+## Performance Optimizations
+
+The app applies more than the minimum required optimization set:
+
+- `next/font` is used in [app/layout.tsx](./app/layout.tsx) for font loading.
+- `next/image` is used for product imagery with explicit sizing, while local
+  preview can optionally bypass noisy DummyJSON optimization behavior through
+  `BYPASS_REMOTE_IMAGE_OPTIMIZATION`.
+- listing and detail data use explicit fetch cache policy in
+  [lib/api/products.ts](./lib/api/products.ts):
+  - listing/detail: `cache: "force-cache"` with `revalidate = 180`
+  - categories: `cache: "force-cache"` with `revalidate = 3600`
+- immutable static assets under `/_next/static/*` are given long-lived cache
+  headers in [public/\_headers](./public/_headers)
+- related products stream behind Suspense so the main detail view is not blocked
+- eager route prefetching was reduced on large link sets, while next-page
+  pagination prefetch remains intent-based on hover/focus
+- upstream data fetches use retries, explicit timeouts, and stale-on-error
+  fallback to reduce the impact of transient API failures
+
+## Testing and QA
+
+Automated checks used:
+
+- `npm run lint`
+- `npx tsc --noEmit`
+- `npm run test -- --run`
+
+Current automated test state:
+
+- `11` Vitest files
+- `23` passing tests
+
+Covered areas include:
+
+- product card rendering
+- query parsing and pagination behavior
+- filter debounce and URL updates
+- mobile filter drawer focus behavior
+- mobile nav keyboard dismissal and focus return
+- TanStack Query provider and enhancement hooks
+- stale-on-error behavior in the API layer
+
+Lighthouse results (`npm run build && npm run start`):
+
+- `/products`: Performance `96`, Accessibility `100`, Best Practices `100`, SEO `100`
+- `/products/[id]` tested with `/products/2?from=%2Fproducts%23results`:
+  Performance `98`, Accessibility `100`, Best Practices `100`, SEO `100`
+
+## Accessibility Notes
+
+Accessibility work completed:
+
+- skip link to main content
+- clearer landmark and heading structure
+- stronger accessible names for filters, pagination, toggles, chips, and cards
+- keyboard-safe mobile drawer and custom select behavior
+- polite live-region updates for results and filter summaries
+- reduced-motion and contrast cleanup
+
+Current local Lighthouse accessibility score:
+
+- `/products`: `100`
+- tested detail page: `100`
+
+## Bonus Tasks Attempted
+
+### B-1 Cloudflare Workers caching
+
+- OpenNext Cloudflare adapter configured with R2 incremental cache and durable
+  revalidation queue
+- immutable static asset caching added through `public/_headers`
+- `/products` responses mirror OpenNext's `x-nextjs-cache` into
+  `x-cache-status` through [worker.mjs](./worker.mjs) so cache behavior can be
+  checked with `curl -I`
+
+### B-2 React Streaming with Suspense
+
+- related products on the detail page stream separately behind Suspense, so the
+  primary product detail content renders first
+
+### B-3 Accessibility audit
+
+- accessibility fixes were applied across landmarks, labels, keyboard flow,
+  focus handling, live regions, contrast, and reduced motion
+- local Lighthouse accessibility score reached `100` on both tested pages
+
+## Deployment Notes
+
+Target platform:
+
+- Cloudflare Workers via OpenNext
+
+Key runtime files:
+
+- [wrangler.jsonc](./wrangler.jsonc)
+- [open-next.config.ts](./open-next.config.ts)
+- [worker.mjs](./worker.mjs)
+
+Required Cloudflare bindings:
+
+- `NEXT_INC_CACHE_R2_BUCKET`
+- `NEXT_CACHE_DO_QUEUE`
+- `IMAGES`
+
+There is no backend API or secret API key to deploy for this assessment.
+
+## Trade-Offs and Known Limitations
+
+- The app depends on a mock external API, so transient DummyJSON slowdowns can
+  still happen.
+- Listing and detail routes use short revalidation windows instead of full
+  static generation because catalog freshness matters more here than a purely
+  static build.
+- Local Lighthouse numbers were collected from a production build on
+  `localhost`; the final deployed URL should still be added after deployment.
+- Some client interactivity remains where it materially improves usability, but
+  the core catalog rendering path stays server-first to avoid unnecessary
+  hydration.
 
 ## Project Shape
 
@@ -72,51 +205,23 @@ components/
   shared/
 features/products/
 lib/
+store/
 tests/
 types/
 ```
 
-## Accessibility QA
+## If I Had Another 2 Hours
 
-Current verified coverage:
-
-- a keyboard-only skip link now jumps past the sticky nav to the main content
-- `/products` and `/products/[id]` now have clearer landmark and heading structure
-- filter inputs, pagination controls, view toggles, recent-search chips, and card links now expose stronger accessible names
-- the mobile filter drawer traps focus correctly, closes on `Escape`, and returns focus to its trigger
-- the mobile nav and custom select menus now have stronger keyboard and focus behavior
-- results and filter summaries now use polite live status messaging where appropriate
-- reduced-motion handling and helper-text contrast were tightened during the accessibility pass
-
-Current automated verification:
-
-- `10` Vitest files
-- `22` passing tests
-- focused regression coverage now includes drawer focus behavior, dropdown keyboard navigation, and mobile-nav focus return
-
-Still best checked manually in the browser:
-
-- a full keyboard sweep on `/products` and `/products/[id]`
-- a quick Lighthouse accessibility pass
-- a final screen-reader spot check for the filter drawer, custom dropdown, and pagination announcements
-
-## Cache Strategy
-
-- Product listing data uses `cache: "force-cache"` with `next.revalidate = 180` so the catalog stays reasonably fresh without making every request fully dynamic.
-- Product detail data uses the same `180` second revalidation window, which keeps detail pages responsive while still allowing pricing and stock changes to refresh on a short cadence.
-- Product categories use a longer `3600` second revalidation window because that taxonomy changes less often than pricing or availability.
-- Internal JSON enhancement routes for `/api/products` and `/api/products/[id]/related` also use `revalidate = 180` so TanStack Query prefetches stay aligned with the server-rendered catalog and detail views.
-- Immutable build assets under `/_next/static/*` are marked with `Cache-Control: public,max-age=31536000,immutable` through [public/\_headers](/home/praise/Desktop/WORK/trade-lens/public/_headers), matching Cloudflare/OpenNext guidance for static assets.
-- OpenNext is configured with an R2-backed incremental cache and a durable revalidation queue, so time-based cache refreshes are coordinated in the Cloudflare runtime instead of relying on request-by-request origin work alone.
-
-## Cache Trade-Offs
-
-- I kept the listing and detail routes on short revalidation windows instead of forcing them fully static because filters, availability, and catalog detail pages should stay meaningfully fresh.
-- I did not add a custom `x-cache-status` response header yet. In the current OpenNext Cloudflare setup, exposing that safely would require worker-level response instrumentation, and I did not want to trade runtime stability for a bonus-only verification signal.
-- Categories are cached longer because they are structurally stable, while listing and detail data are treated as operational content that changes more frequently.
+- add a lightweight product comparison tray so users can pin up to three items
+  and compare price, rating, stock, and warranty side by side
+- add a “recently viewed” strip across the catalog and detail flow so product
+  discovery feels more continuous and less one-page-at-a-time
+- add a compact category intelligence panel that surfaces signals from the
+  current result set, like strongest-rated category or best-value category
 
 ## Notes
 
-- The product data depends on an external API, so occasional upstream slowdowns can still happen during development.
-- The `/products` route now fails more gracefully with retries, timeouts, a short stale-response fallback for transient upstream errors, and product-facing fallback states.
-- Deployment and final assessment notes will be added once the app is feature-complete.
+- [docs/testing-issues.md](./docs/testing-issues.md) tracks real issues found
+  during browser and local testing
+- [docs/pre-deploy-checklist.md](./docs/pre-deploy-checklist.md) is the final
+  submission checklist
