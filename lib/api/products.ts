@@ -38,7 +38,32 @@ const DEFAULT_PRODUCTS_API_RETRIES = 2;
 const DEFAULT_PRODUCTS_API_RETRY_DELAY_MS = 300;
 const DEFAULT_PRODUCTS_API_TIMEOUT_MS = 5000;
 const PRODUCT_LIST_REVALIDATE_SECONDS = 180;
+const PRODUCT_DETAIL_REVALIDATE_SECONDS = 180;
 const PRODUCT_CATEGORIES_REVALIDATE_SECONDS = 3600;
+
+type ProductsApiCachePolicy = {
+  cache: "force-cache";
+  revalidate: number;
+  tags: string[];
+};
+
+const PRODUCT_LIST_CACHE_POLICY: ProductsApiCachePolicy = {
+  cache: "force-cache",
+  revalidate: PRODUCT_LIST_REVALIDATE_SECONDS,
+  tags: ["products"],
+};
+
+const PRODUCT_DETAIL_CACHE_POLICY: ProductsApiCachePolicy = {
+  cache: "force-cache",
+  revalidate: PRODUCT_DETAIL_REVALIDATE_SECONDS,
+  tags: ["product-detail"],
+};
+
+const PRODUCT_CATEGORIES_CACHE_POLICY: ProductsApiCachePolicy = {
+  cache: "force-cache",
+  revalidate: PRODUCT_CATEGORIES_REVALIDATE_SECONDS,
+  tags: ["product-categories"],
+};
 
 type ProductCollectionRoute = {
   pathname: string;
@@ -81,30 +106,34 @@ function mergeProductsFetchInit(
 function getProductsApiDefaultInit(
   kind: "list" | "categories" | "detail",
 ): ProductsApiFetchInit {
-  switch (kind) {
-    case "categories":
-      return {
-        next: {
-          revalidate: PRODUCT_CATEGORIES_REVALIDATE_SECONDS,
-          tags: ["product-categories"],
-        },
-      };
-    case "detail":
-      return {
-        next: {
-          revalidate: PRODUCT_LIST_REVALIDATE_SECONDS,
-          tags: ["product-detail"],
-        },
-      };
-    case "list":
-    default:
-      return {
-        next: {
-          revalidate: PRODUCT_LIST_REVALIDATE_SECONDS,
-          tags: ["products"],
-        },
-      };
-  }
+  const policy =
+    kind === "categories"
+      ? PRODUCT_CATEGORIES_CACHE_POLICY
+      : kind === "detail"
+        ? PRODUCT_DETAIL_CACHE_POLICY
+        : PRODUCT_LIST_CACHE_POLICY;
+
+  // These defaults make the upstream cache policy explicit: categories keep a
+  // longer cached window, while list and detail data revalidate on a shorter
+  // cadence so the catalog stays reasonably fresh without going fully dynamic.
+  return {
+    cache: policy.cache,
+    next: {
+      revalidate: policy.revalidate,
+      tags: [...policy.tags],
+    },
+  };
+}
+
+function buildProductsTaggedInit(
+  baseInit: ProductsApiFetchInit,
+  tags: string[],
+) {
+  return mergeProductsFetchInit(baseInit, {
+    next: {
+      tags,
+    },
+  });
 }
 
 function getProductsApiErrorCode(error: unknown): string | null {
@@ -366,7 +395,12 @@ export function normalizeProductCategoryList(
 // filters, while the full browse/search/category listing logic lands next.
 export async function getProductById(id: number, init?: ProductsApiFetchInit) {
   const product = await fetchProductsApi<Product>(`/products/${id}`, {
-    init: mergeProductsFetchInit(getProductsApiDefaultInit("detail"), init),
+    init: mergeProductsFetchInit(
+      buildProductsTaggedInit(getProductsApiDefaultInit("detail"), [
+        `product-detail:${id}`,
+      ]),
+      init,
+    ),
   });
 
   return normalizeProduct(product);
@@ -410,7 +444,13 @@ export async function getRelatedProductsByCategory(
     {
       limit: limit + 1,
       skip: 0,
-      init: mergeProductsFetchInit(getProductsApiDefaultInit("detail"), init),
+      init: mergeProductsFetchInit(
+        buildProductsTaggedInit(getProductsApiDefaultInit("detail"), [
+          "related-products",
+          `product-category:${category}`,
+        ]),
+        init,
+      ),
     },
   );
 

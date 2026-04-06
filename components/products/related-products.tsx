@@ -49,6 +49,7 @@ export async function RelatedProducts({
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <RelatedProductsClient
+        category={category}
         currentProductId={currentProductId}
         limit={limit}
         returnHref={returnHref}

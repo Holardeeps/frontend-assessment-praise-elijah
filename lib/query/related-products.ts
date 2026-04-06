@@ -13,16 +13,20 @@ export class RelatedProductsQueryError extends Error {
 export async function fetchRelatedProducts(
   productId: number,
   limit: number,
+  category?: string,
 ) {
-  const response = await fetch(
-    `/api/products/${productId}/related?limit=${limit}`,
-    {
-      cache: "no-store",
-      headers: {
-        Accept: "application/json",
-      },
+  const searchParams = new URLSearchParams({ limit: String(limit) });
+
+  if (category) {
+    searchParams.set("category", category);
+  }
+
+  const response = await fetch(`/api/products/${productId}/related?${searchParams.toString()}`, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
     },
-  );
+  });
 
   if (!response.ok) {
     throw new RelatedProductsQueryError(

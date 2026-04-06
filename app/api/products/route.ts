@@ -2,6 +2,11 @@ import { parseProductQuery } from "@/features/products/utils";
 import { getProductList, ProductsApiError } from "@/lib/api/products";
 import type { ProductListResponse } from "@/types/product";
 
+// This keeps the enhancement route on the same short revalidation window as
+// the server-rendered catalog list so client-prefetched JSON stays aligned with
+// the main listing experience.
+export const revalidate = 180;
+
 function buildProductRouteSearchParams(request: Request) {
   const searchParams = new URL(request.url).searchParams;
 

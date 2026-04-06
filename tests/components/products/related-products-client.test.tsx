@@ -61,6 +61,7 @@ describe("RelatedProductsClient", () => {
 
     renderWithProviders(
       <RelatedProductsClient
+        category="laptops"
         currentProductId={101}
         limit={3}
         returnHref="/products"
