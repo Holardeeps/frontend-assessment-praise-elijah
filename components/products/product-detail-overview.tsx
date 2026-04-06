@@ -1,9 +1,10 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import { formatCategoryLabel } from "@/features/products/utils";
 import { formatCurrency, formatInteger } from "@/lib/utils/format-number";
 import type { ProductDetailModel } from "@/types/product";
+
+import { ProductBreadcrumb } from "./product-breadcrumb";
 
 type ProductDetailOverviewProps = {
   product: ProductDetailModel;
@@ -16,11 +17,13 @@ export function ProductDetailOverview({
 
   return (
     <section className="space-y-5">
-      {/* This gives the detail route a simple way back to the originating
-          listing view before the fuller breadcrumb phase lands next. */}
-      <Link href={product.breadcrumbHref} className="button-secondary">
-        {product.breadcrumbLabel}
-      </Link>
+      {/* The breadcrumb keeps the detail route connected to the exact catalog
+          view the person came from while also establishing the current page. */}
+      <ProductBreadcrumb
+        href={product.breadcrumbHref}
+        label={product.breadcrumbLabel}
+        currentLabel={product.title}
+      />
 
       <div className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6 sm:py-6">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-start">

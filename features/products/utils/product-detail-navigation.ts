@@ -10,8 +10,20 @@ export function buildProductDetailHref(
   productId: number,
   query: ProductQueryState,
 ) {
+  return buildProductDetailHrefFromReturnHref(
+    productId,
+    `${buildProductsHref(query)}#results`,
+  );
+}
+
+// This keeps detail links reusable outside the listing page, such as related
+// items on the detail route that should preserve the same return target.
+export function buildProductDetailHrefFromReturnHref(
+  productId: number,
+  returnHref: string,
+) {
   const searchParams = new URLSearchParams({
-    from: `${buildProductsHref(query)}#results`,
+    from: returnHref,
   });
 
   return `/products/${productId}?${searchParams.toString()}`;

@@ -388,6 +388,37 @@ export async function getProductCategorySlugs(init?: ProductsApiFetchInit) {
   return normalizeProductCategoryList(categories);
 }
 
+// This fetches adjacent products from the same category for the detail route
+// without forcing the main page to wait on a secondary recommendation block.
+export async function getRelatedProductsByCategory(
+  category: string,
+  {
+    excludeProductId,
+    limit = 3,
+    init,
+  }: {
+    excludeProductId: number;
+    limit?: number;
+    init?: ProductsApiFetchInit;
+  },
+) {
+  const response = await fetchProductCollection(
+    {
+      pathname: `/products/category/${category}`,
+      searchParams: {},
+    },
+    {
+      limit: limit + 1,
+      skip: 0,
+      init: mergeProductsFetchInit(getProductsApiDefaultInit("detail"), init),
+    },
+  );
+
+  return response.products
+    .filter((product) => product.id !== excludeProductId)
+    .slice(0, limit);
+}
+
 // This is the single listing entry point the products page will use next. It
 // chooses the narrowest available DummyJSON route, then either paginates
 // directly or falls back to server-side filtering when the API cannot express
