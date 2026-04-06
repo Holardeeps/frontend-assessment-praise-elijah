@@ -6,6 +6,8 @@ import {
 } from "@/features/products/utils";
 import type { ProductQueryState } from "@/types/filters";
 
+import { ProductPaginationNextLink } from "./product-pagination-next-link";
+
 type ProductPaginationProps = {
   page: number;
   totalPages: number;
@@ -23,6 +25,10 @@ export function ProductPagination({
 }: ProductPaginationProps) {
   const previousPageHref = `${buildProductsHref(query, { page: page - 1 })}#results`;
   const nextPageHref = `${buildProductsHref(query, { page: page + 1 })}#results`;
+  const nextPageQuery: ProductQueryState = {
+    ...query,
+    page: page + 1,
+  };
   const visiblePages = getPaginationWindow(page, totalPages);
 
   return (
@@ -99,15 +105,10 @@ export function ProductPagination({
             </div>
 
             {hasNextPage ? (
-              <Link
+              <ProductPaginationNextLink
                 href={nextPageHref}
-                className="button-primary min-h-11 min-w-11 px-0 sm:min-h-12 sm:min-w-35 sm:px-4"
-              >
-                <span aria-hidden="true" className="text-base sm:hidden">
-                  →
-                </span>
-                <span className="sr-only sm:not-sr-only">Next</span>
-              </Link>
+                query={nextPageQuery}
+              />
             ) : (
               <span
                 aria-disabled="true"
