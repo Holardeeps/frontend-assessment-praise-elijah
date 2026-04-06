@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -102,5 +102,44 @@ describe("Product filters", () => {
       "/products?category=smartphones&sort=price-asc",
       { scroll: false },
     );
+  });
+
+  it("supports keyboard navigation inside the select menu and returns focus to the trigger on escape", async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(
+      <ProductFilterSelect
+        filterKey="sort"
+        label="Sort order"
+        options={[
+          { label: "Default order", value: "" },
+          { label: "Price: Low to high", value: "price-asc" },
+          { label: "Price: High to low", value: "price-desc" },
+        ]}
+        query={baseQuery}
+        value={baseQuery.sort ?? ""}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: /sort order/i });
+
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+
+    const selectedOption = screen.getByRole("option", {
+      name: /price: high to low/i,
+    });
+
+    await waitFor(() => {
+      expect(selectedOption).toHaveFocus();
+    });
+
+    await user.keyboard("{ArrowUp}");
+    expect(
+      screen.getByRole("option", { name: /price: low to high/i }),
+    ).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
   });
 });

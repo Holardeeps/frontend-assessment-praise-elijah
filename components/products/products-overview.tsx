@@ -14,11 +14,15 @@ export function ProductsOverview({
   querySummary,
 }: ProductsOverviewProps) {
   return (
-    <section id="overview" className="scroll-mt-36 animate-reveal max-w-5xl">
+    <section
+      id="overview"
+      aria-labelledby="overview-title"
+      className="scroll-mt-36 animate-reveal max-w-5xl"
+    >
       <span className="eyebrow">Catalog explorer</span>
 
       <div className="mt-6">
-        <h1 className="max-w-4xl text-balance">
+        <h1 id="overview-title" className="max-w-4xl text-balance">
           Explore products with clear pricing, availability, and category
           context.
         </h1>
@@ -38,29 +42,35 @@ export function ProductsOverview({
         </a>
       </div>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="metric-kicker">Products</p>
-          <h2 className="metric-value mt-3 wrap-break-word">{totalResults}</h2>
-        </article>
+      <dl className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
+          <dt className="metric-kicker">Products</dt>
+          <dd className="metric-value mt-3 wrap-break-word text-ink">
+            {totalResults}
+          </dd>
+        </div>
 
-        <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="metric-kicker">Page</p>
-          <h2 className="metric-value mt-3 wrap-break-word">
+        <div className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
+          <dt className="metric-kicker">Page</dt>
+          <dd className="metric-value mt-3 wrap-break-word text-ink">
             {currentPageLabel}
-          </h2>
-        </article>
+          </dd>
+        </div>
 
-        <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="metric-kicker">Avg rating</p>
-          <h2 className="metric-value mt-3 wrap-break-word">{averageRating}</h2>
-        </article>
+        <div className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
+          <dt className="metric-kicker">Avg rating</dt>
+          <dd className="metric-value mt-3 wrap-break-word text-ink">
+            {averageRating}
+          </dd>
+        </div>
 
-        <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="metric-kicker">Categories</p>
-          <h2 className="metric-value mt-3 wrap-break-word">{categoryCount}</h2>
-        </article>
-      </div>
+        <div className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
+          <dt className="metric-kicker">Categories</dt>
+          <dd className="metric-value mt-3 wrap-break-word text-ink">
+            {categoryCount}
+          </dd>
+        </div>
+      </dl>
 
       <div className="mt-6 rounded-panel-md border border-line-soft bg-panel px-4 py-4">
         <p className="metric-kicker">View summary</p>

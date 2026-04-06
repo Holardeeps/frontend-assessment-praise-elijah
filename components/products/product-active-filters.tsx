@@ -28,9 +28,11 @@ export function ProductActiveFilters({
           "rounded-panel-md border border-dashed border-line-soft bg-panel-soft px-4 py-3",
           className ?? "",
         ].join(" ")}
+        aria-live="polite"
+        aria-atomic="true"
       >
         <p className="metric-kicker">Current view</p>
-        <p className="mt-2 text-sm leading-6 text-copy-soft">
+        <p role="status" className="mt-2 text-sm leading-6 text-copy-soft">
           No filters are active right now, so this view is showing the full
           catalog.
         </p>
@@ -46,21 +48,22 @@ export function ProductActiveFilters({
         "rounded-panel-md border border-line-soft bg-panel-soft px-4 py-3.5",
         className ?? "",
       ].join(" ")}
+      aria-live="polite"
+      aria-atomic="true"
     >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <p className="metric-kicker">Current view</p>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <ul aria-label="Active filters" className="mt-2 flex flex-wrap gap-2">
             {activeFilters.map((filter) => (
-              <span
-                key={filter.key}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-line-soft bg-panel px-3 py-2 text-xs font-semibold text-ink sm:text-sm"
-              >
-                <span className="shrink-0 text-copy-soft">{filter.label}:</span>
-                <span className="max-w-36 truncate sm:max-w-52">{filter.value}</span>
-              </span>
+              <li key={filter.key}>
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-line-soft bg-panel px-3 py-2 text-xs font-semibold text-ink sm:text-sm">
+                  <span className="shrink-0 text-copy-soft">{filter.label}:</span>
+                  <span className="max-w-36 truncate sm:max-w-52">{filter.value}</span>
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         <Link href={clearFiltersHref} className="button-secondary w-full md:w-auto">

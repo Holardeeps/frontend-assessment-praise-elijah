@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type NavItem = {
   href: string;
@@ -23,9 +23,13 @@ const defaultCta = {
 export function NavBar({ items, cta = defaultCta }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMenuMounted, setIsMenuMounted] = useState(false);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileNavRef = useRef<HTMLElement>(null);
+  const shouldRestoreFocusRef = useRef(false);
 
   // This keeps menu interactions predictable on mobile by letting every link close the panel after navigation instead of leaving it open.
-  const closeMenu = () => {
+  const closeMenu = (restoreFocus = false) => {
+    shouldRestoreFocusRef.current = restoreFocus;
     setIsMenuOpen(false);
   };
 
@@ -47,9 +51,42 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
     };
   }, [isMenuMounted, isMenuOpen]);
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      const firstLink = mobileNavRef.current?.querySelector<HTMLElement>("a[href]");
+      firstLink?.focus();
+      return;
+    }
+
+    if (!shouldRestoreFocusRef.current) {
+      return;
+    }
+
+    toggleButtonRef.current?.focus();
+    shouldRestoreFocusRef.current = false;
+  }, [isMenuOpen]);
+
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
   const toggleMenu = () => {
     if (isMenuOpen) {
-      setIsMenuOpen(false);
+      closeMenu(true);
       return;
     }
 
@@ -98,6 +135,7 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
             {/* This hamburger gives small screens a clean top bar while the full
             menu opens below as a focused vertical panel. */}
             <button
+              ref={toggleButtonRef}
               type="button"
               aria-controls="mobile-navigation"
               aria-expanded={isMenuOpen}
@@ -136,6 +174,7 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
               }`}
             >
             <nav
+              ref={mobileNavRef}
               aria-label="Mobile primary"
               className="flex flex-col items-center gap-2 border-t border-line-soft pt-4 text-center"
             >
@@ -144,7 +183,7 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
                   key={item.href}
                   href={item.href}
                   className="w-full rounded-panel-sm px-3 py-3 text-center text-sm font-semibold uppercase tracking-wide text-ink transition-colors duration-150 ease-fluid hover:bg-panel-soft"
-                  onClick={closeMenu}
+                  onClick={() => closeMenu(false)}
                 >
                   {item.label}
                   </a>
@@ -153,7 +192,7 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
                 <a
                   href={cta.href}
                   className="button-primary mt-2 w-full"
-                  onClick={closeMenu}
+                  onClick={() => closeMenu(false)}
                 >
                   {cta.label}
                 </a>

@@ -53,7 +53,7 @@ export default async function ProductsPage({
     const retryHref = buildProductsHref(query);
 
     return (
-      <main className="pb-14 sm:pb-16 lg:pb-20">
+      <main id="main-content" className="pb-14 sm:pb-16 lg:pb-20">
         <NavBar
           items={navItems}
           cta={{ href: "#results", label: "View results" }}
@@ -92,7 +92,7 @@ export default async function ProductsPage({
   const querySummary = getProductQuerySummary(productList.query);
 
   return (
-    <main className="pb-14 sm:pb-16 lg:pb-20">
+    <main id="main-content" className="pb-14 sm:pb-16 lg:pb-20">
       <NavBar
         items={navItems}
         cta={{ href: "#results", label: "View results" }}

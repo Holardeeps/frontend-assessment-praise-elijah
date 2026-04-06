@@ -51,6 +51,7 @@ export function ProductPagination({
             {hasPreviousPage ? (
               <Link
                 href={previousPageHref}
+                aria-label="Go to previous page"
                 className="button-secondary min-h-11 min-w-11 px-0 sm:min-h-12 sm:min-w-35 sm:px-4"
               >
                 <span aria-hidden="true" className="text-base sm:hidden">
@@ -92,6 +93,11 @@ export function ProductPagination({
                     key={pageItem}
                     href={`${pageHref}#results`}
                     aria-current={isCurrentPage ? "page" : undefined}
+                    aria-label={
+                      isCurrentPage
+                        ? `Page ${pageItem}, current page`
+                        : `Go to page ${pageItem}`
+                    }
                     className={
                       isCurrentPage
                         ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-navy px-4 text-sm font-semibold text-white shadow-panel"

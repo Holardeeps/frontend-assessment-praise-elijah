@@ -13,11 +13,16 @@ export function RelatedProductsContent({
   returnHref,
 }: RelatedProductsContentProps) {
   return (
-    <section className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6 sm:py-6">
+    <section
+      aria-labelledby="related-products-title"
+      className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6 sm:py-6"
+    >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="section-kicker">Related products</p>
-          <h2 className="section-title mt-2">More items from this category</h2>
+          <h2 id="related-products-title" className="section-title mt-2">
+            More items from this category
+          </h2>
         </div>
         <p className="max-w-2xl text-sm leading-6 text-copy-soft">
           Keep exploring nearby products without leaving this catalog flow.
@@ -48,10 +53,15 @@ export function RelatedProductsMessage({ kind }: RelatedProductsMessageProps) {
       : "Related recommendations are taking longer than expected. The main product details are still ready above.";
 
   return (
-    <section className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6 sm:py-6">
+    <section
+      aria-labelledby="related-products-title"
+      className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6 sm:py-6"
+    >
       <div className="space-y-3">
         <p className="section-kicker">Related products</p>
-        <h2 className="section-title">More items from this category</h2>
+        <h2 id="related-products-title" className="section-title">
+          More items from this category
+        </h2>
         <p className="max-w-2xl text-sm leading-6 text-copy-soft">
           {description}
         </p>

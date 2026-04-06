@@ -8,6 +8,7 @@ type ProductsStatePanelProps = {
   details?: ReactNode;
   variant?: "default" | "dashed";
   className?: string;
+  headingLevel?: "h2" | "h3";
 };
 
 export function ProductsStatePanel({
@@ -18,11 +19,13 @@ export function ProductsStatePanel({
   details,
   variant = "default",
   className,
+  headingLevel = "h3",
 }: ProductsStatePanelProps) {
   const panelClassName =
     variant === "dashed"
       ? "border-dashed border-line-strong bg-panel-soft"
       : "border-line-soft bg-panel";
+  const HeadingTag = headingLevel;
 
   return (
     <div
@@ -35,7 +38,9 @@ export function ProductsStatePanel({
         .join(" ")}
     >
       <p className="section-kicker">{kicker}</p>
-      <h3 className="mt-2 text-[clamp(1.5rem,1.3rem+0.8vw,2rem)]">{title}</h3>
+      <HeadingTag className="mt-2 text-[clamp(1.5rem,1.3rem+0.8vw,2rem)]">
+        {title}
+      </HeadingTag>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-copy-soft sm:text-base">
         {description}
       </p>

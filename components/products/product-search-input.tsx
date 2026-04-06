@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PRODUCT_FILTER_DEBOUNCE_MS } from "@/features/products/constants";
@@ -17,6 +17,7 @@ export function ProductSearchInput({ query }: ProductSearchInputProps) {
   const router = useRouter();
   const addRecentSearch = useUiStore((state) => state.addRecentSearch);
   const lastAppliedHrefRef = useRef<string | null>(null);
+  const inputId = useId();
   const [searchText, setSearchText] = useState(() => query.search);
   const debouncedSearchText = useDebouncedValue(
     searchText,
@@ -53,15 +54,19 @@ export function ProductSearchInput({ query }: ProductSearchInputProps) {
   }, [addRecentSearch, currentHref, debouncedSearchText, query, router]);
 
   return (
-    <label className="field-shell">
-      <span className="metric-kicker">Search products</span>
+    <div className="field-shell">
+      <label htmlFor={inputId} className="metric-kicker">
+        Search products
+      </label>
       <input
+        id={inputId}
         type="search"
         value={searchText}
         onChange={(event) => setSearchText(event.target.value.toLowerCase())}
         placeholder="Search by product name or keyword"
+        aria-label="Search products"
         className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-copy-soft sm:text-base"
       />
-    </label>
+    </div>
   );
 }

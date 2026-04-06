@@ -34,6 +34,7 @@ export function ProductPaginationNextLink({
       href={href}
       onMouseEnter={prefetchNextPage}
       onFocus={prefetchNextPage}
+      aria-label="Go to next page"
       className="button-primary min-h-11 min-w-11 px-0 sm:min-h-12 sm:min-w-35 sm:px-4"
     >
       <span aria-hidden="true" className="text-base sm:hidden">

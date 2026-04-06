@@ -14,7 +14,11 @@ const navItems = [
 
 export default function Loading() {
   return (
-    <main aria-busy="true" className="pb-14 sm:pb-16 lg:pb-20">
+    <main
+      id="main-content"
+      aria-busy="true"
+      className="pb-14 sm:pb-16 lg:pb-20"
+    >
       <NavBar
         items={navItems}
         cta={{ href: "#results", label: "View results" }}

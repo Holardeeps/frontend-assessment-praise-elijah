@@ -10,25 +10,28 @@ export function ProductCategoryStrip({
   return (
     <section
       id="categories"
+      aria-labelledby="categories-title"
       className="scroll-mt-36 rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6"
     >
       <div>
         <p className="section-kicker">Categories</p>
-        <h2 className="section-title mt-2">
+        <h2 id="categories-title" className="section-title mt-2">
           Browse the catalog by product group
         </h2>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <ul
+        aria-label="Available categories"
+        className="mt-5 flex flex-wrap gap-2"
+      >
         {categories.slice(0, 14).map((category) => (
-          <span
-            key={category.slug}
-            className="pill bg-panel-soft px-3 py-2 text-sm"
-          >
-            {category.name}
-          </span>
+          <li key={category.slug}>
+            <span className="pill bg-panel-soft px-3 py-2 text-sm">
+              {category.name}
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }

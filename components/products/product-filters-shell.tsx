@@ -51,12 +51,15 @@ export function ProductFiltersShell({
   return (
     <section
       id={PRODUCT_FILTER_SECTION_ID}
+      aria-labelledby="filters-title"
       className="scroll-mt-36 rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6"
     >
       <div className="w-full max-w-6xl 2xl:max-w-none">
         <div className="max-w-2xl">
           <p className="section-kicker">Refine results</p>
-          <h2 className="section-title mt-2">Shape the catalog around what matters most</h2>
+          <h2 id="filters-title" className="section-title mt-2">
+            Shape the catalog around what matters most
+          </h2>
         </div>
 
         <ProductFiltersPanel activeFilterCount={activeFilterCount}>

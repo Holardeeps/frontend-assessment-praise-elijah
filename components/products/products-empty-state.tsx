@@ -26,17 +26,16 @@ export function ProductsEmptyState({ query }: ProductsEmptyStateProps) {
         variant="dashed"
         details={
           activeFilters.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
+            <ul aria-label="Active filters" className="flex flex-wrap gap-2">
               {activeFilters.map((filter) => (
-                <span
-                  key={filter.key}
-                  className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-line-soft bg-panel px-3 py-2 text-xs font-semibold text-ink sm:text-sm"
-                >
-                  <span className="shrink-0 text-copy-soft">{filter.label}:</span>
-                  <span className="max-w-40 truncate sm:max-w-60">{filter.value}</span>
-                </span>
+                <li key={filter.key}>
+                  <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-line-soft bg-panel px-3 py-2 text-xs font-semibold text-ink sm:text-sm">
+                    <span className="shrink-0 text-copy-soft">{filter.label}:</span>
+                    <span className="max-w-40 truncate sm:max-w-60">{filter.value}</span>
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : null
         }
         actions={

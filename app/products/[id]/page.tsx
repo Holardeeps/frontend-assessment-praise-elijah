@@ -128,7 +128,7 @@ export default async function ProductDetailPage({
   };
 
   return (
-    <main className="pb-14 sm:pb-16 lg:pb-20">
+    <main id="main-content" className="pb-14 sm:pb-16 lg:pb-20">
       <NavBar
         items={navItems}
         cta={{ href: returnHref, label: "Back to catalog" }}

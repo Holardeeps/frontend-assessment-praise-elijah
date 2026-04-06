@@ -16,7 +16,7 @@ export function ProductDetailOverview({
   const primaryImage = product.images[0] || product.thumbnail;
 
   return (
-    <section className="space-y-5">
+    <section aria-labelledby="product-detail-title" className="space-y-5">
       {/* The breadcrumb keeps the detail route connected to the exact catalog
           view the person came from while also establishing the current page. */}
       <ProductBreadcrumb
@@ -66,7 +66,10 @@ export function ProductDetailOverview({
                 ) : null}
               </div>
 
-              <h1 className="text-balance text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+              <h1
+                id="product-detail-title"
+                className="text-balance text-3xl font-semibold leading-tight text-ink sm:text-4xl"
+              >
                 {product.title}
               </h1>
 

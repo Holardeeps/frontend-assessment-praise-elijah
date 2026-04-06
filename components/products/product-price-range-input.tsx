@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PRODUCT_FILTER_DEBOUNCE_MS } from "@/features/products/constants";
@@ -33,6 +33,8 @@ export function ProductPriceRangeInput({
 }: ProductPriceRangeInputProps) {
   const router = useRouter();
   const lastAppliedHrefRef = useRef<string | null>(null);
+  const minInputId = useId();
+  const maxInputId = useId();
   const [minPriceText, setMinPriceText] = useState(() =>
     getInitialPriceValue(query.minPrice),
   );
@@ -95,9 +97,13 @@ export function ProductPriceRangeInput({
         </div>
 
         <div className="grid gap-2.5 xs:grid-cols-2">
-          <label className="flex flex-col gap-1 rounded-panel-sm border border-line-soft bg-panel px-3 py-2.5">
+          <label
+            htmlFor={minInputId}
+            className="flex flex-col gap-1 rounded-panel-sm border border-line-soft bg-panel px-3 py-2.5"
+          >
             <span className="metric-kicker">Min</span>
             <input
+              id={minInputId}
               type="number"
               min="0"
               step="0.01"
@@ -105,13 +111,18 @@ export function ProductPriceRangeInput({
               value={minPriceText}
               onChange={(event) => setMinPriceText(event.target.value)}
               placeholder="0"
+              aria-label="Minimum price"
               className="w-full bg-transparent text-sm font-semibold text-ink outline-none placeholder:text-copy-soft sm:text-base"
             />
           </label>
 
-          <label className="flex flex-col gap-1 rounded-panel-sm border border-line-soft bg-panel px-3 py-2.5">
+          <label
+            htmlFor={maxInputId}
+            className="flex flex-col gap-1 rounded-panel-sm border border-line-soft bg-panel px-3 py-2.5"
+          >
             <span className="metric-kicker">Max</span>
             <input
+              id={maxInputId}
               type="number"
               min="0"
               step="0.01"
@@ -119,6 +130,7 @@ export function ProductPriceRangeInput({
               value={maxPriceText}
               onChange={(event) => setMaxPriceText(event.target.value)}
               placeholder="Any"
+              aria-label="Maximum price"
               className="w-full bg-transparent text-sm font-semibold text-ink outline-none placeholder:text-copy-soft sm:text-base"
             />
           </label>

@@ -60,3 +60,9 @@ fix applied. Update this file whenever a real testing issue is found.
   structured than it needed to.
   Fix: wrapped both panels in a responsive context row that places them side by
   side only when recent searches exist.
+
+- Skip link visibility:
+  The accessibility skip link appeared visibly at the top of the page even
+  before it received keyboard focus.
+  Fix: tightened the skip-link CSS so it stays visually hidden until
+  `:focus-visible`, while still remaining available to keyboard users.

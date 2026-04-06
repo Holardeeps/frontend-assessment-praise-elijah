@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 
 export type SelectMenuOption = {
   label: string;
@@ -23,9 +29,18 @@ export function SelectMenu({
   placeholder = "Select an option",
 }: SelectMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const listboxId = useId();
+  const labelId = useId();
+  const valueId = useId();
   const selectedOption = options.find((option) => option.value === value);
+  const selectedIndex = Math.max(
+    options.findIndex((option) => option.value === value),
+    0,
+  );
 
   // This closes the floating menu when someone clicks anywhere outside the
   // component, keeping the dropdown behavior predictable across the app.
@@ -46,9 +61,14 @@ export function SelectMenu({
   // This gives keyboard users an immediate way to dismiss the open options
   // list without needing to move focus away from the control first.
   useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setIsOpen(false);
+        triggerRef.current?.focus();
       }
     };
 
@@ -57,27 +77,113 @@ export function SelectMenu({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [isOpen]);
+
+  useEffect(() => {
+    setActiveIndex(selectedIndex);
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      optionRefs.current[selectedIndex]?.focus();
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [isOpen, selectedIndex]);
 
   const handleSelect = (nextValue: string) => {
     onChange(nextValue);
     setIsOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const handleTriggerKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+  ) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+      return;
+    }
+
+    event.preventDefault();
+    setIsOpen(true);
+  };
+
+  const handleOptionKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      const nextIndex = index === options.length - 1 ? 0 : index + 1;
+      setActiveIndex(nextIndex);
+      optionRefs.current[nextIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const previousIndex = index === 0 ? options.length - 1 : index - 1;
+      setActiveIndex(previousIndex);
+      optionRefs.current[previousIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      setActiveIndex(0);
+      optionRefs.current[0]?.focus();
+      return;
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      const lastIndex = options.length - 1;
+      setActiveIndex(lastIndex);
+      optionRefs.current[lastIndex]?.focus();
+      return;
+    }
+
+    if (event.key === "Tab") {
+      setIsOpen(false);
+    }
   };
 
   return (
-    <div ref={rootRef} className="relative">
+    <div
+      ref={rootRef}
+      className="relative"
+      onBlurCapture={(event) => {
+        if (!rootRef.current?.contains(event.relatedTarget as Node | null)) {
+          setIsOpen(false);
+        }
+      }}
+    >
       <button
+        ref={triggerRef}
         type="button"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
         aria-controls={listboxId}
+        aria-labelledby={`${labelId} ${valueId}`}
         className="flex w-full flex-col items-start gap-1 rounded-panel-md border border-line-soft bg-panel px-4 py-2.5 text-left transition-all duration-150 ease-fluid hover:border-line-strong focus-visible:outline-offset-2 sm:py-3"
         data-state={isOpen ? "open" : "closed"}
         onClick={() => setIsOpen((current) => !current)}
+        onKeyDown={handleTriggerKeyDown}
       >
-        <span className="metric-kicker">{label}</span>
+        <span id={labelId} className="metric-kicker">
+          {label}
+        </span>
         <span className="flex w-full items-center justify-between gap-3">
-          <span className="truncate text-sm font-semibold text-ink sm:text-base">
+          <span
+            id={valueId}
+            className="truncate text-sm font-semibold text-ink sm:text-base"
+          >
             {selectedOption?.label ?? placeholder}
           </span>
           <span
@@ -106,20 +212,25 @@ export function SelectMenu({
 
       {isOpen ? (
         <div className="animate-reveal absolute top-[calc(100%+0.5rem)] left-0 right-0 z-30 max-h-60 overflow-y-auto rounded-panel-md border border-line-soft bg-panel p-2 shadow-panel-floating">
-          <ul id={listboxId} role="listbox" aria-label={label}>
-            {options.map((option) => {
+          <ul id={listboxId} role="listbox" aria-labelledby={labelId}>
+            {options.map((option, index) => {
               const isSelected = option.value === value;
 
               return (
                 <li key={option.value || "all"}>
                   <button
+                    ref={(element) => {
+                      optionRefs.current[index] = element;
+                    }}
                     type="button"
                     role="option"
                     aria-selected={isSelected}
+                    tabIndex={index === activeIndex ? 0 : -1}
                     className={`flex w-full items-center justify-between gap-3 rounded-panel-sm px-3.5 py-2.5 text-left text-sm font-semibold leading-tight text-ink transition-all duration-150 ease-fluid hover:bg-panel-soft sm:px-4 sm:py-3 sm:text-[0.95rem] ${
                       isSelected ? "bg-panel-soft" : ""
                     }`}
                     onClick={() => handleSelect(option.value)}
+                    onKeyDown={(event) => handleOptionKeyDown(event, index)}
                   >
                     <span className="truncate">{option.label}</span>
                     <span

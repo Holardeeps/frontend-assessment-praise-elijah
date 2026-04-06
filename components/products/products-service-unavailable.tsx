@@ -20,6 +20,7 @@ export function ProductsServiceUnavailable({
         kicker="Results"
         title="The catalog is taking longer than expected"
         description="The product service did not respond in time. Try this view again, or return to the full catalog and retry from a simpler starting point."
+        headingLevel="h2"
         actions={
           <>
             <Link href={retryHref} className="button-primary w-full sm:w-auto">

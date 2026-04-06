@@ -15,6 +15,7 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
   return (
     <section
       id="results"
+      aria-labelledby="results-title"
       className="animate-reveal animate-reveal-delayed scroll-mt-36"
     >
       <div className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6">
@@ -23,9 +24,16 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
             <p className="section-kicker">
               Results
             </p>
-            <h2 className="section-title mt-2">Catalog results</h2>
+            <h2 id="results-title" className="section-title mt-2">
+              Catalog results
+            </h2>
           </div>
-          <p className="max-w-xl text-sm leading-6 text-copy-soft">
+          <p
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="max-w-xl text-sm leading-6 text-copy-soft"
+          >
             Showing {productList.products.length} products on this page out of{" "}
             {formatInteger(productList.total)} matching items.
           </p>

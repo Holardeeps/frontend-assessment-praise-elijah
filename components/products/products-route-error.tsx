@@ -31,7 +31,7 @@ export function ProductsRouteError({
   }, [error]);
 
   return (
-    <main className="pb-14 sm:pb-16 lg:pb-20">
+    <main id="main-content" className="pb-14 sm:pb-16 lg:pb-20">
       <NavBar
         items={navItems}
         cta={{ href: "#results", label: "View results" }}
@@ -42,6 +42,7 @@ export function ProductsRouteError({
           kicker="Results"
           title="Something interrupted this catalog view"
           description="The page hit an unexpected issue while loading this route. Try the current view again, or return to the full catalog and restart from a stable view."
+          headingLevel="h2"
           actions={
             <>
               <button
