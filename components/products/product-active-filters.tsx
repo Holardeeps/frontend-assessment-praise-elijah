@@ -12,14 +12,23 @@ import type { ProductQueryState } from "@/types/filters";
 
 type ProductActiveFiltersProps = {
   query: ProductQueryState;
+  className?: string;
 };
 
-export function ProductActiveFilters({ query }: ProductActiveFiltersProps) {
+export function ProductActiveFilters({
+  query,
+  className,
+}: ProductActiveFiltersProps) {
   const activeFilters = getActiveProductFilters(query);
 
   if (activeFilters.length === 0) {
     return (
-      <div className="mt-4 rounded-panel-md border border-dashed border-line-soft bg-panel-soft px-4 py-3">
+      <div
+        className={[
+          "rounded-panel-md border border-dashed border-line-soft bg-panel-soft px-4 py-3",
+          className ?? "",
+        ].join(" ")}
+      >
         <p className="metric-kicker">Current view</p>
         <p className="mt-2 text-sm leading-6 text-copy-soft">
           No filters are active right now, so this view is showing the full
@@ -32,7 +41,12 @@ export function ProductActiveFilters({ query }: ProductActiveFiltersProps) {
   const clearFiltersHref = `${buildProductsHref(DEFAULT_PRODUCT_QUERY_STATE)}#${PRODUCT_FILTER_SECTION_ID}`;
 
   return (
-    <div className="mt-4 rounded-panel-md border border-line-soft bg-panel-soft px-4 py-3.5">
+    <div
+      className={[
+        "rounded-panel-md border border-line-soft bg-panel-soft px-4 py-3.5",
+        className ?? "",
+      ].join(" ")}
+    >
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <p className="metric-kicker">Current view</p>

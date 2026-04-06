@@ -20,7 +20,7 @@ export function ProductCardImage({
   const shouldShowFallback = hasImageError || imageUrl.trim().length === 0;
 
   return (
-    <div className="relative aspect-4/3 overflow-hidden rounded-panel-md border border-line-soft bg-panel-soft">
+    <div className="product-card-image-shell relative aspect-4/3 overflow-hidden rounded-panel-md border border-line-soft bg-panel-soft">
       {shouldShowFallback ? (
         <div className="flex h-full flex-col justify-between p-4">
           <span className="eyebrow">Catalog view</span>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PRODUCT_FILTER_DEBOUNCE_MS } from "@/features/products/constants";
 import { useDebouncedValue } from "@/features/products/hooks/use-debounced-value";
 import { buildProductsFilterHref } from "@/features/products/utils";
+import { useUiStore } from "@/store/use-ui-store";
 import type { ProductQueryState } from "@/types/filters";
 
 type ProductSearchInputProps = {
@@ -14,6 +15,7 @@ type ProductSearchInputProps = {
 
 export function ProductSearchInput({ query }: ProductSearchInputProps) {
   const router = useRouter();
+  const addRecentSearch = useUiStore((state) => state.addRecentSearch);
   const [searchText, setSearchText] = useState(() => query.search);
   const debouncedSearchText = useDebouncedValue(
     searchText,
@@ -33,8 +35,12 @@ export function ProductSearchInput({ query }: ProductSearchInputProps) {
       search: normalizedSearchText,
     });
 
+    if (normalizedSearchText.length > 0) {
+      addRecentSearch(normalizedSearchText);
+    }
+
     router.replace(nextHref, { scroll: false });
-  }, [debouncedSearchText, query, router]);
+  }, [addRecentSearch, debouncedSearchText, query, router]);
 
   return (
     <label className="field-shell">

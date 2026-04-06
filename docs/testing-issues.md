@@ -39,3 +39,16 @@ fix applied. Update this file whenever a real testing issue is found.
   The filter debounce test initially timed out under fake timers.
   Fix: made the debounce assertion deterministic by using direct input change
   events and direct post-timer assertions.
+
+- Compact catalog layout:
+  The compact results mode squeezed the metrics into the image column, which
+  made the stat cards wrap awkwardly and feel cramped.
+  Fix: switched compact mode to an explicit grid-area layout so image, copy,
+  chips, and metrics each keep the space they need.
+
+- Filter context layout:
+  On screens above mobile, the recent-search panel and current-view panel were
+  stacking vertically, which made the filter section feel longer and less
+  structured than it needed to.
+  Fix: wrapped both panels in a responsive context row that places them side by
+  side only when recent searches exist.

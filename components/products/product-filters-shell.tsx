@@ -3,12 +3,16 @@ import {
   PRODUCT_FILTER_SECTION_ID,
   PRODUCT_SORT_OPTIONS,
 } from "@/features/products/constants";
-import { getProductFilterPreviews } from "@/features/products/utils";
+import {
+  getActiveProductFilters,
+  getProductFilterPreviews,
+} from "@/features/products/utils";
 import type { ProductCategory } from "@/types/api";
 import type { ProductQueryState } from "@/types/filters";
 
 import { ProductFilterSelect } from "./product-filter-select";
-import { ProductActiveFilters } from "./product-active-filters";
+import { ProductFilterContext } from "./product-filter-context";
+import { ProductFiltersPanel } from "./product-filters-panel";
 import { ProductPriceRangeInput } from "./product-price-range-input";
 import { ProductSearchInput } from "./product-search-input";
 
@@ -25,6 +29,7 @@ export function ProductFiltersShell({
 }: ProductFiltersShellProps) {
   void categoryCount;
   const filterPreviews = getProductFilterPreviews(query);
+  const activeFilterCount = getActiveProductFilters(query).length;
   const categoryOptions = [
     { label: "All categories", value: "" },
     ...categories.map((category) => ({
@@ -54,38 +59,40 @@ export function ProductFiltersShell({
           <h2 className="section-title mt-2">Shape the catalog around what matters most</h2>
         </div>
 
-        <div className="mt-5 grid items-start gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,1fr)_minmax(0,1fr)]">
-          <ProductSearchInput key={query.search} query={query} />
+        <ProductFiltersPanel activeFilterCount={activeFilterCount}>
+          <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <ProductSearchInput key={query.search} query={query} />
 
-          <ProductFilterSelect
-            filterKey="category"
-            label="Category"
-            options={categoryOptions}
-            query={query}
-            value={query.category ?? ""}
-          />
-
-          <ProductFilterSelect
-            filterKey="sort"
-            label="Sort order"
-            options={sortOptions}
-            query={query}
-            value={query.sort ?? ""}
-          />
-
-          {priceFilter ? (
-            <ProductPriceRangeInput
-              key={`${query.minPrice ?? "none"}-${query.maxPrice ?? "none"}`}
-              className="md:col-span-2 xl:col-span-3"
-              label={priceFilter.label}
-              description={priceFilter.description}
-              preview={filterPreviews.priceRange}
+            <ProductFilterSelect
+              filterKey="category"
+              label="Category"
+              options={categoryOptions}
               query={query}
+              value={query.category ?? ""}
             />
-          ) : null}
-        </div>
 
-        <ProductActiveFilters query={query} />
+            <ProductFilterSelect
+              filterKey="sort"
+              label="Sort order"
+              options={sortOptions}
+              query={query}
+              value={query.sort ?? ""}
+            />
+
+            {priceFilter ? (
+              <ProductPriceRangeInput
+                key={`${query.minPrice ?? "none"}-${query.maxPrice ?? "none"}`}
+                className="md:col-span-2 xl:col-span-3"
+                label={priceFilter.label}
+                description={priceFilter.description}
+                preview={filterPreviews.priceRange}
+                query={query}
+              />
+            ) : null}
+          </div>
+        </ProductFiltersPanel>
+
+        <ProductFilterContext query={query} />
       </div>
     </section>
   );

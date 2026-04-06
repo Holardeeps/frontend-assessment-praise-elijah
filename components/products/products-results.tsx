@@ -5,6 +5,7 @@ import { formatInteger } from "@/lib/utils/format-number";
 import { ProductCard } from "./product-card";
 import { ProductsEmptyState } from "./products-empty-state";
 import { ProductPagination } from "./product-pagination";
+import { ProductResultsViewport } from "./product-results-viewport";
 
 type ProductsResultsProps = {
   productList: ProductListResponse;
@@ -31,7 +32,7 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
         </div>
 
         {productList.products.length > 0 ? (
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <ProductResultsViewport>
             {productList.products.map((product) => (
               <ProductCard
                 key={product.id}
@@ -39,7 +40,7 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
                 href={buildProductDetailHref(product.id, productList.query)}
               />
             ))}
-          </div>
+          </ProductResultsViewport>
         ) : (
           <ProductsEmptyState query={productList.query} />
         )}
