@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TradeLens
 
-## Getting Started
+TradeLens is a product catalog explorer built with Next.js, TypeScript, Tailwind CSS, and Cloudflare/OpenNext. It is currently in active build for a frontend assessment and is not live yet.
 
-First, run the development server:
+## Current Status
+
+- `/` redirects to `/products`
+- `/products` is server-rendered and fetches live product data
+- URL query state already supports search, category, price, sort, and page parsing
+- catalog cards now include live product imagery with graceful fallback
+- numbered pagination plus previous / next navigation is working
+- Vitest + React Testing Library are set up and running
+
+## Run Locally
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+For a Cloudflare-style local preview:
+
+```bash
+npm run preview
+```
+
+Open `http://localhost:8787`.
+
+## Useful Scripts
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run test -- --run
+npm run lint
+npm run build
+npm run preview
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The repo includes [.env.example](/home/praise/Desktop/WORK/trade-lens/.env.example).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Current keys:
 
-## Learn More
+- `NEXT_PUBLIC_SITE_URL`
+- `PRODUCTS_API_BASE_URL`
 
-To learn more about Next.js, take a look at the following resources:
+The app currently falls back to DummyJSON if `PRODUCTS_API_BASE_URL` is not set.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Shape
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+app/
+components/
+  products/
+  shared/
+features/products/
+lib/
+tests/
+types/
+```
 
-## Deploy on Vercel
+## Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The product data depends on an external API, so occasional upstream timeouts can happen during development.
+- Friendly loading, error, and empty-state hardening are planned in upcoming phases.
+- Deployment and final assessment notes will be added once the app is feature-complete.

@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { buildProductsHref } from "@/features/products/utils";
+import {
+  buildProductsHref,
+  getPaginationWindow,
+} from "@/features/products/utils";
 import type { ProductQueryState } from "@/types/filters";
 
 type ProductPaginationProps = {
@@ -18,47 +21,99 @@ export function ProductPagination({
   hasNextPage,
   query,
 }: ProductPaginationProps) {
-  const previousPageHref = buildProductsHref(query, { page: page - 1 });
-  const nextPageHref = buildProductsHref(query, { page: page + 1 });
+  const previousPageHref = `${buildProductsHref(query, { page: page - 1 })}#results`;
+  const nextPageHref = `${buildProductsHref(query, { page: page + 1 })}#results`;
+  const visiblePages = getPaginationWindow(page, totalPages);
 
   return (
-    <div className="mt-6 flex flex-col gap-3 rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
-          Pagination
-        </p>
-        <p className="mt-2 text-sm leading-6 text-ink">
-          Page {page} of {Math.max(totalPages, 1)}
-        </p>
-      </div>
+    <nav
+      aria-label="Catalog pagination"
+      className="mt-6 rounded-panel-lg border border-line-soft bg-panel px-4 py-4 shadow-panel sm:px-5"
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="metric-kicker">
+            Pagination
+          </p>
+          <p className="mt-2 text-sm leading-6 text-ink">
+            Page {page} of {Math.max(totalPages, 1)}
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        {hasPreviousPage ? (
-          <Link href={previousPageHref} className="button-secondary min-w-[9.5rem]">
-            Previous page
-          </Link>
-        ) : (
-          <span
-            aria-disabled="true"
-            className="inline-flex min-h-12 min-w-[9.5rem] items-center justify-center rounded-full border border-line-soft bg-panel px-4 text-sm font-semibold uppercase tracking-[0.08em] text-copy-soft opacity-70"
-          >
-            Previous page
-          </span>
-        )}
+        <div className="flex flex-col gap-3 lg:items-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+            {hasPreviousPage ? (
+              <Link
+                href={previousPageHref}
+                className="button-secondary w-full sm:min-w-35 sm:w-auto"
+              >
+                Previous
+              </Link>
+            ) : (
+              <span
+                aria-disabled="true"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-line-soft bg-panel-soft px-4 text-sm font-semibold uppercase tracking-wide text-copy-soft opacity-70 sm:min-w-35 sm:w-auto"
+              >
+                Previous
+              </span>
+            )}
 
-        {hasNextPage ? (
-          <Link href={nextPageHref} className="button-primary min-w-[9.5rem]">
-            Next page
-          </Link>
-        ) : (
-          <span
-            aria-disabled="true"
-            className="inline-flex min-h-12 min-w-[9.5rem] items-center justify-center rounded-full bg-navy px-4 text-sm font-semibold uppercase tracking-[0.08em] text-white opacity-55"
-          >
-            Next page
-          </span>
-        )}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {visiblePages.map((pageItem) => {
+                if (typeof pageItem !== "number") {
+                  return (
+                    <span
+                      key={pageItem}
+                      aria-hidden="true"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center text-sm font-semibold text-copy-soft"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+
+                const pageHref = buildProductsHref(query, { page: pageItem });
+                const isCurrentPage = pageItem === page;
+
+                return (
+                  <Link
+                    key={pageItem}
+                    href={`${pageHref}#results`}
+                    aria-current={isCurrentPage ? "page" : undefined}
+                    className={
+                      isCurrentPage
+                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-navy px-4 text-sm font-semibold text-white shadow-panel"
+                        : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line-soft bg-panel-soft px-4 text-sm font-semibold text-ink transition-colors duration-150 ease-fluid hover:border-line-strong hover:bg-panel"
+                    }
+                  >
+                    {pageItem}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {hasNextPage ? (
+              <Link
+                href={nextPageHref}
+                className="button-primary w-full sm:min-w-35 sm:w-auto"
+              >
+                Next
+              </Link>
+            ) : (
+              <span
+                aria-disabled="true"
+                className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-navy px-4 text-sm font-semibold uppercase tracking-wide text-white opacity-55 sm:min-w-35 sm:w-auto"
+              >
+                Next
+              </span>
+            )}
+          </div>
+
+          {/* <p className="text-sm leading-6 text-copy-soft">
+            Keep browsing the same set of matching products as you move through pages.
+          </p> */}
+        </div>
       </div>
-    </div>
+    </nav>
   );
 }

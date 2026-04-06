@@ -1,13 +1,6 @@
 import { PRODUCT_SORT_OPTIONS } from "@/features/products/constants";
 import type { ProductQueryState } from "@/types/filters";
-
-function formatCategoryLabel(category: string) {
-  return category
-    .split("-")
-    .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
-}
+import { formatCategoryLabel } from "./format-category-label";
 
 function getSortLabel(sort: ProductQueryState["sort"]) {
   return PRODUCT_SORT_OPTIONS.find((option) => option.value === sort)?.label ?? null;

@@ -45,7 +45,7 @@ export default async function ProductsPage({
         cta={{ href: "#results", label: "View results" }}
       />
 
-      <section className="content-shell space-y-8 pt-6 sm:pt-8">
+      <section className="page-gutter space-y-8 pt-6 sm:pt-8">
         <ProductsOverview
           totalResults={formatInteger(productList.total)}
           currentPageLabel={`${productList.page}/${Math.max(productList.totalPages, 1)}`}

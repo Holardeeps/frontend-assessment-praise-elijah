@@ -20,6 +20,8 @@ export type PaginationMeta = {
   hasPreviousPage: boolean;
 };
 
+export type PaginationWindowItem = number | "start-ellipsis" | "end-ellipsis";
+
 // This keeps the page size safe even if a later caller accidentally passes an
 // invalid value, which makes the pagination helpers more resilient to reuse.
 function normalizePerPage(perPage?: number) {
@@ -87,4 +89,61 @@ export function buildPaginationMeta({
     hasNextPage: totalPages > 0 && normalizedCurrentPage < totalPages,
     hasPreviousPage: normalizedCurrentPage > MIN_PRODUCT_PAGE && totalPages > 0,
   };
+}
+
+// This builds a compact pagination window so the UI can show nearby page
+// numbers without rendering a long row of links when the result set is large.
+export function getPaginationWindow(
+  currentPage: number,
+  totalPages: number,
+  maxVisiblePages = 5,
+): PaginationWindowItem[] {
+  if (totalPages <= 0) {
+    return [];
+  }
+
+  const safeCurrentPage = clampPageToTotal(currentPage, totalPages);
+  const visiblePageCount = Math.max(3, Math.floor(maxVisiblePages));
+
+  if (totalPages <= visiblePageCount) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const siblingCount = Math.max(1, Math.floor((visiblePageCount - 1) / 2));
+  let startPage = Math.max(2, safeCurrentPage - siblingCount);
+  let endPage = Math.min(totalPages - 1, safeCurrentPage + siblingCount);
+
+  const targetInnerCount = visiblePageCount - 2;
+  const currentInnerCount = endPage - startPage + 1;
+
+  if (currentInnerCount < targetInnerCount) {
+    const pagesToExpand = targetInnerCount - currentInnerCount;
+    const expandLeft = Math.max(0, startPage - 2);
+    const leftShift = Math.min(expandLeft, Math.ceil(pagesToExpand / 2));
+    const rightShift = Math.min(
+      Math.max(0, totalPages - 1 - endPage),
+      pagesToExpand - leftShift,
+    );
+
+    startPage -= leftShift;
+    endPage += rightShift;
+  }
+
+  const paginationWindow: PaginationWindowItem[] = [1];
+
+  if (startPage > 2) {
+    paginationWindow.push("start-ellipsis");
+  }
+
+  for (let pageNumber = startPage; pageNumber <= endPage; pageNumber += 1) {
+    paginationWindow.push(pageNumber);
+  }
+
+  if (endPage < totalPages - 1) {
+    paginationWindow.push("end-ellipsis");
+  }
+
+  paginationWindow.push(totalPages);
+
+  return paginationWindow;
 }

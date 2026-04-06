@@ -15,10 +15,10 @@ export function ProductCategoryStrip({
     >
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copy-soft">
+          <p className="section-kicker">
             Categories
           </p>
-          <h2 className="mt-2 text-[1.55rem]">
+          <h2 className="section-title mt-2">
             Browse the catalog by product group
           </h2>
         </div>

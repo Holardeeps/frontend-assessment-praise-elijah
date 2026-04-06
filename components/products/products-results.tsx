@@ -12,43 +12,47 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
   return (
     <section
       id="results"
-      className="scroll-mt-36 animate-reveal [animation-delay:120ms]"
+      className="animate-reveal animate-reveal-delayed scroll-mt-36"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-copy-soft">
-            Results
+      <div className="rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="section-kicker">
+              Results
+            </p>
+            <h2 className="section-title mt-2">Catalog results</h2>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-copy-soft">
+            Showing {productList.products.length} products on this page out of{" "}
+            {formatInteger(productList.total)} matching items.
           </p>
-          <h2 className="mt-2 text-[1.55rem]">Catalog results</h2>
         </div>
-        <p className="text-sm leading-6 text-copy-soft">
-          Showing {productList.products.length} products on this page out of{" "}
-          {formatInteger(productList.total)} matching items.
-        </p>
+
+        {productList.products.length > 0 ? (
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {productList.products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6 rounded-panel-lg border border-dashed border-line-strong bg-panel-soft px-5 py-10 text-center">
+            <h3>No products matched this view.</h3>
+            <p className="mt-3 text-sm leading-6 text-copy-soft">
+              Try a broader search or return to the full catalog to keep exploring.
+            </p>
+          </div>
+        )}
+
+        {productList.totalPages > 1 ? (
+          <ProductPagination
+            page={productList.page}
+            totalPages={productList.totalPages}
+            hasPreviousPage={productList.hasPreviousPage}
+            hasNextPage={productList.hasNextPage}
+            query={productList.query}
+          />
+        ) : null}
       </div>
-
-      {productList.products.length > 0 ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {productList.products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-6 rounded-panel-lg border border-dashed border-line-strong bg-panel-soft px-5 py-10 text-center">
-          <h3>No products matched this view.</h3>
-          <p className="mt-3 text-sm leading-6 text-copy-soft">
-            Try a broader search or return to the full catalog to keep exploring.
-          </p>
-        </div>
-      )}
-
-      <ProductPagination
-        page={productList.page}
-        totalPages={productList.totalPages}
-        hasPreviousPage={productList.hasPreviousPage}
-        hasNextPage={productList.hasNextPage}
-        query={productList.query}
-      />
     </section>
   );
 }

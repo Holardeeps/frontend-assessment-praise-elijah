@@ -40,39 +40,33 @@ export function ProductsOverview({
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
-            Products
-          </p>
-          <h2 className="mt-3 text-[1.9rem]">{totalResults}</h2>
+          <p className="metric-kicker">Products</p>
+          <h2 className="metric-value mt-3 wrap-break-word">{totalResults}</h2>
         </article>
 
         <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
-            Page
-          </p>
-          <h2 className="mt-3 text-[1.9rem]">{currentPageLabel}</h2>
+          <p className="metric-kicker">Page</p>
+          <h2 className="metric-value mt-3 wrap-break-word">
+            {currentPageLabel}
+          </h2>
         </article>
 
         <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
-            Avg rating
-          </p>
-          <h2 className="mt-3 text-[1.9rem]">{averageRating}</h2>
+          <p className="metric-kicker">Avg rating</p>
+          <h2 className="metric-value mt-3 wrap-break-word">{averageRating}</h2>
         </article>
 
         <article className="rounded-panel-md border border-line-soft bg-panel-soft px-4 py-4">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
-            Categories
-          </p>
-          <h2 className="mt-3 text-[1.9rem]">{categoryCount}</h2>
+          <p className="metric-kicker">Categories</p>
+          <h2 className="metric-value mt-3 wrap-break-word">{categoryCount}</h2>
         </article>
       </div>
 
       <div className="mt-6 rounded-panel-md border border-line-soft bg-panel px-4 py-4">
-        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-copy-soft">
-          View summary
+        <p className="metric-kicker">View summary</p>
+        <p className="mt-3 wrap-break-word text-sm leading-6 text-ink">
+          {querySummary}
         </p>
-        <p className="mt-3 text-sm leading-6 text-ink">{querySummary}</p>
       </div>
     </section>
   );
