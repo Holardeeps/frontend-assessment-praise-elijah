@@ -7,7 +7,7 @@ a lightweight commerce discovery surface: fast listing pages, shareable filter
 state, server-rendered detail pages, and resilient handling of upstream
 slowdowns.
 
-Live URL: add after Cloudflare deployment.
+Live URL: https://trade-lens.holardeeps.workers.dev
 
 ## What It Includes
 
@@ -45,19 +45,16 @@ npm run preview
 
 The repo includes [.env.example](./.env.example).
 
-Available variables:
+Required variable:
 
 - `NEXT_PUBLIC_SITE_URL`
-- `PRODUCTS_API_BASE_URL`
-- `BYPASS_REMOTE_IMAGE_OPTIMIZATION`
 
 Notes:
 
 - no API key is required
 - no separate backend service is required
-- if `PRODUCTS_API_BASE_URL` is unset, the app falls back to DummyJSON
-- `BYPASS_REMOTE_IMAGE_OPTIMIZATION` is optional and mainly useful for noisy
-  local preview/debug sessions
+- the app uses DummyJSON directly for this assessment, so no extra API base URL
+  configuration is needed
 
 ## Architecture Decisions
 
@@ -119,7 +116,7 @@ Covered areas include:
 - TanStack Query provider and enhancement hooks
 - stale-on-error behavior in the API layer
 
-Lighthouse results (`npm run build && npm run start`):
+Lighthouse results from a local production build (`npm run build && npm run start`):
 
 - `/products`: Performance `96`, Accessibility `100`, Best Practices `100`, SEO `100`
 - `/products/[id]` tested with `/products/2?from=%2Fproducts%23results`:
@@ -148,9 +145,10 @@ Current local Lighthouse accessibility score:
 - OpenNext Cloudflare adapter configured with R2 incremental cache and durable
   revalidation queue
 - immutable static asset caching added through `public/_headers`
-- `/products` responses mirror OpenNext's `x-nextjs-cache` into
-  `x-cache-status` through [worker.mjs](./worker.mjs) so cache behavior can be
-  checked with `curl -I`
+- attempted a small worker-level cache-status mirror in
+  [worker.mjs](./worker.mjs) to surface listing cache behavior
+- deployed `/products` responses did not expose `x-cache-status` publicly, so
+  that verification part remains incomplete
 
 ### B-2 React Streaming with Suspense
 
@@ -190,8 +188,8 @@ There is no backend API or secret API key to deploy for this assessment.
 - Listing and detail routes use short revalidation windows instead of full
   static generation because catalog freshness matters more here than a purely
   static build.
-- Local Lighthouse numbers were collected from a production build on
-  `localhost`; the final deployed URL should still be added after deployment.
+- Lighthouse numbers documented here were collected from a local production
+  build rather than the live deployed URL.
 - Some client interactivity remains where it materially improves usability, but
   the core catalog rendering path stays server-first to avoid unnecessary
   hydration.
@@ -223,5 +221,5 @@ types/
 
 - [docs/testing-issues.md](./docs/testing-issues.md) tracks real issues found
   during browser and local testing
-- [docs/pre-deploy-checklist.md](./docs/pre-deploy-checklist.md) is the final
-  submission checklist
+- Lighthouse screenshots are stored in
+  [docs/lighthouse-proof](./docs/lighthouse-proof)
