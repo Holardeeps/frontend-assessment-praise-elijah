@@ -1,5 +1,4 @@
 import type { ProductCategory } from "@/types/api";
-import { formatInteger } from "@/lib/utils/format-number";
 
 type ProductCategoryStripProps = {
   categories: ProductCategory[];
@@ -13,20 +12,11 @@ export function ProductCategoryStrip({
       id="categories"
       className="scroll-mt-36 rounded-panel-lg border border-line-soft bg-panel px-5 py-5 shadow-panel sm:px-6"
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="section-kicker">
-            Categories
-          </p>
-          <h2 className="section-title mt-2">
-            Browse the catalog by product group
-          </h2>
-        </div>
-        <p className="max-w-xl text-sm leading-6 text-copy-soft">
-          {formatInteger(categories.length)} categories are ready to explore,
-          making it easier for our client&apos;s to move quickly from broad
-          browsing to the exact product group they need.
-        </p>
+      <div>
+        <p className="section-kicker">Categories</p>
+        <h2 className="section-title mt-2">
+          Browse the catalog by product group
+        </h2>
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">

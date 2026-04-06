@@ -24,6 +24,7 @@ type ProductsApiFetchInit = RequestInit & {
 type ProductsApiRequestOptions = {
   searchParams?: ProductsApiSearchParams;
   init?: ProductsApiFetchInit;
+  retries?: number;
 };
 
 type ProductListRequestOptions = {
@@ -32,6 +33,10 @@ type ProductListRequestOptions = {
 };
 
 const DEFAULT_PRODUCTS_API_BASE_URL = "https://dummyjson.com";
+const DEFAULT_PRODUCTS_API_RETRIES = 2;
+const DEFAULT_PRODUCTS_API_RETRY_DELAY_MS = 300;
+const PRODUCT_LIST_REVALIDATE_SECONDS = 180;
+const PRODUCT_CATEGORIES_REVALIDATE_SECONDS = 3600;
 
 type ProductCollectionRoute = {
   pathname: string;
@@ -50,6 +55,110 @@ export class ProductsApiError extends Error {
     this.status = options.status;
     this.url = options.url;
   }
+}
+
+function mergeProductsFetchInit(
+  defaults: ProductsApiFetchInit,
+  overrides?: ProductsApiFetchInit,
+): ProductsApiFetchInit {
+  return {
+    ...defaults,
+    ...overrides,
+    headers: {
+      ...defaults.headers,
+      ...overrides?.headers,
+    },
+    next: {
+      ...defaults.next,
+      ...overrides?.next,
+      tags: [...(defaults.next?.tags ?? []), ...(overrides?.next?.tags ?? [])],
+    },
+  };
+}
+
+function getProductsApiDefaultInit(
+  kind: "list" | "categories" | "detail",
+): ProductsApiFetchInit {
+  switch (kind) {
+    case "categories":
+      return {
+        next: {
+          revalidate: PRODUCT_CATEGORIES_REVALIDATE_SECONDS,
+          tags: ["product-categories"],
+        },
+      };
+    case "detail":
+      return {
+        next: {
+          revalidate: PRODUCT_LIST_REVALIDATE_SECONDS,
+          tags: ["product-detail"],
+        },
+      };
+    case "list":
+    default:
+      return {
+        next: {
+          revalidate: PRODUCT_LIST_REVALIDATE_SECONDS,
+          tags: ["products"],
+        },
+      };
+  }
+}
+
+function getProductsApiErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  const code = "code" in error ? error.code : null;
+  return typeof code === "string" ? code : null;
+}
+
+function isRetryableProductsApiError(error: unknown) {
+  if (error instanceof ProductsApiError) {
+    return error.status >= 500 || error.status === 429;
+  }
+
+  if (!(error instanceof TypeError)) {
+    return false;
+  }
+
+  const directCode = getProductsApiErrorCode(error.cause);
+
+  if (directCode) {
+    return [
+      "ETIMEDOUT",
+      "ECONNRESET",
+      "ECONNREFUSED",
+      "ENOTFOUND",
+      "UND_ERR_CONNECT_TIMEOUT",
+      "UND_ERR_HEADERS_TIMEOUT",
+    ].includes(directCode);
+  }
+
+  if (error.cause instanceof AggregateError) {
+    return error.cause.errors.some((causeError) => {
+      const causeCode = getProductsApiErrorCode(causeError);
+      return causeCode
+        ? [
+            "ETIMEDOUT",
+            "ECONNRESET",
+            "ECONNREFUSED",
+            "ENOTFOUND",
+            "UND_ERR_CONNECT_TIMEOUT",
+            "UND_ERR_HEADERS_TIMEOUT",
+          ].includes(causeCode)
+        : false;
+    });
+  }
+
+  return true;
+}
+
+function waitForProductsApiRetry(delayMs: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
 }
 
 // This resolves the external API base once in a predictable way: use the env
@@ -85,25 +194,53 @@ export function buildProductsApiUrl(
 // path and leaves room for Next-specific fetch options like revalidate later on.
 export async function fetchProductsApi<TResponse>(
   pathname: string,
-  { searchParams, init }: ProductsApiRequestOptions = {},
+  { searchParams, init, retries = DEFAULT_PRODUCTS_API_RETRIES }: ProductsApiRequestOptions = {},
 ): Promise<TResponse> {
   const url = buildProductsApiUrl(pathname, searchParams);
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      ...init?.headers,
-    },
-  });
 
-  if (!response.ok) {
-    throw new ProductsApiError("Failed to fetch products data.", {
-      status: response.status,
-      url: url.toString(),
-    });
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        ...init,
+        headers: {
+          Accept: "application/json",
+          ...init?.headers,
+        },
+      });
+
+      if (!response.ok) {
+        throw new ProductsApiError("Failed to fetch products data.", {
+          status: response.status,
+          url: url.toString(),
+        });
+      }
+
+      return (await response.json()) as TResponse;
+    } catch (error) {
+      const isLastAttempt = attempt === retries;
+
+      if (isLastAttempt || !isRetryableProductsApiError(error)) {
+        if (error instanceof ProductsApiError) {
+          throw error;
+        }
+
+        throw new ProductsApiError(
+          "The product service is temporarily unavailable.",
+          {
+            status: 503,
+            url: url.toString(),
+          },
+        );
+      }
+
+      await waitForProductsApiRetry(DEFAULT_PRODUCTS_API_RETRY_DELAY_MS * (attempt + 1));
+    }
   }
 
-  return (await response.json()) as TResponse;
+  throw new ProductsApiError("The product service is temporarily unavailable.", {
+    status: 503,
+    url: url.toString(),
+  });
 }
 
 // DummyJSON category lists can come back as either full objects or slug-only
@@ -167,14 +304,16 @@ export function normalizeProductCategoryList(
 // These small foundational reads are useful immediately for detail pages and
 // filters, while the full browse/search/category listing logic lands next.
 export async function getProductById(id: number, init?: ProductsApiFetchInit) {
-  const product = await fetchProductsApi<Product>(`/products/${id}`, { init });
+  const product = await fetchProductsApi<Product>(`/products/${id}`, {
+    init: mergeProductsFetchInit(getProductsApiDefaultInit("detail"), init),
+  });
 
   return normalizeProduct(product);
 }
 
 export async function getProductCategories(init?: ProductsApiFetchInit) {
   const categories = await fetchProductsApi<ProductCategory[]>("/products/categories", {
-    init,
+    init: mergeProductsFetchInit(getProductsApiDefaultInit("categories"), init),
   });
 
   return normalizeProductCategoryList(categories);
@@ -182,7 +321,7 @@ export async function getProductCategories(init?: ProductsApiFetchInit) {
 
 export async function getProductCategorySlugs(init?: ProductsApiFetchInit) {
   const categories = await fetchProductsApi<ProductCategoryList>("/products/category-list", {
-    init,
+    init: mergeProductsFetchInit(getProductsApiDefaultInit("categories"), init),
   });
 
   return normalizeProductCategoryList(categories);
@@ -196,20 +335,21 @@ export async function getProductList(
   query: ProductQueryState,
   { perPage = PRODUCTS_PER_PAGE, init }: ProductListRequestOptions = {},
 ): Promise<ProductListResponse> {
+  const mergedInit = mergeProductsFetchInit(getProductsApiDefaultInit("list"), init);
   const strategy = determineListStrategy(query);
 
   if (strategy.mode === "server-filtered") {
     return getServerFilteredProductList(query, {
       perPage,
       baseRoute: strategy.baseRoute,
-      init,
+      init: mergedInit,
     });
   }
 
   return getDirectProductList(query, {
     perPage,
     baseRoute: strategy.baseRoute,
-    init,
+    init: mergedInit,
   });
 }
 

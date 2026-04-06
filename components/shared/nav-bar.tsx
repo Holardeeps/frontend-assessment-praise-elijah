@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type NavItem = {
   href: string;
@@ -22,17 +22,45 @@ const defaultCta = {
 
 export function NavBar({ items, cta = defaultCta }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuMounted, setIsMenuMounted] = useState(false);
 
-  // This keeps menu interactions predictable on mobile by letting every link
-  // close the panel after navigation instead of leaving it open.
+  // This keeps menu interactions predictable on mobile by letting every link close the panel after navigation instead of leaving it open.
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  useEffect(() => {
+    if (isMenuOpen) {
+      return;
+    }
+
+    if (!isMenuMounted) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsMenuMounted(false);
+    }, 220);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [isMenuMounted, isMenuOpen]);
+
+  const toggleMenu = () => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+      return;
+    }
+
+    setIsMenuMounted(true);
+    setIsMenuOpen(true);
   };
 
   return (
     <header className="sticky top-0 z-40 animate-reveal bg-panel/95 pt-4 pb-3 backdrop-blur-sm sm:pt-5">
       <div className="page-gutter">
-        <div className="rounded-nav-shell border border-line-soft bg-panel px-4 py-3 shadow-panel sm:px-5">
+        <div className="relative rounded-nav-shell border border-line-soft bg-panel px-4 py-3 shadow-panel sm:px-5">
           <div className="flex items-center justify-between gap-4">
             <a href="#overview" className="flex min-w-0 items-center gap-3">
               <span className="brand-mark" aria-hidden>
@@ -51,7 +79,10 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
             {/* This desktop nav uses explicit flex utilities instead of relying on
             broad helper classes, which keeps it reliably horizontal on larger screens. */}
             <div className="hidden lg:flex lg:items-center lg:gap-6 xl:gap-8">
-              <nav aria-label="Primary" className="flex items-center gap-5 lg:gap-7">
+              <nav
+                aria-label="Primary"
+                className="flex items-center gap-5 lg:gap-7"
+              >
                 {items.map((item) => (
                   <a key={item.href} href={item.href} className="site-nav-link">
                     {item.label}
@@ -74,49 +105,48 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
                 isMenuOpen ? "Close navigation menu" : "Open navigation menu"
               }
               className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line-soft bg-panel text-ink transition-colors duration-150 ease-fluid hover:border-line-strong lg:hidden"
-              onClick={() => setIsMenuOpen((current) => !current)}
+              onClick={toggleMenu}
             >
               <span className="relative block h-4 w-5">
                 <span
-                  className={`absolute left-0 top-0 block h-0.5 w-5 rounded-full bg-current transition-transform duration-200 ease-fluid ${
-                    isMenuOpen ? "translate-y-1.75 rotate-45" : ""
+                  className={`hamburger-line hamburger-line-top ${
+                    isMenuOpen ? "hamburger-line-top-open" : ""
                   }`}
                 />
                 <span
-                  className={`absolute left-0 top-1.75 block h-0.5 w-5 rounded-full bg-current transition-opacity duration-150 ease-fluid ${
-                    isMenuOpen ? "opacity-0" : "opacity-100"
+                  className={`hamburger-line hamburger-line-middle ${
+                    isMenuOpen ? "hamburger-line-middle-open" : ""
                   }`}
                 />
                 <span
-                  className={`absolute left-0 top-3.5 block h-0.5 w-5 rounded-full bg-current transition-transform duration-200 ease-fluid ${
-                    isMenuOpen ? "-translate-y-1.75 -rotate-45" : ""
+                  className={`hamburger-line hamburger-line-bottom ${
+                    isMenuOpen ? "hamburger-line-bottom-open" : ""
                   }`}
                 />
               </span>
             </button>
           </div>
 
-          {/* This expanding mobile panel stays in the normal document flow, so
-          opening it increases the header height and pushes the page content down. */}
-          <div
-            id="mobile-navigation"
-            className={`mobile-nav-panel grid duration-200 ease-fluid lg:hidden ${
-              isMenuOpen ? "mobile-nav-open" : "mobile-nav-closed"
-            }`}
-          >
-            <div className="overflow-hidden">
-              <nav
-                aria-label="Mobile primary"
-                className="flex flex-col gap-2 border-t border-line-soft pt-4"
-              >
-                {items.map((item) => (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    className="rounded-panel-sm px-3 py-3 text-sm font-semibold uppercase tracking-wide text-ink transition-colors duration-150 ease-fluid hover:bg-panel-soft"
-                    onClick={closeMenu}
-                  >
-                    {item.label}
+          {isMenuMounted ? (
+            <div
+              id="mobile-navigation"
+              aria-hidden={!isMenuOpen}
+              className={`mobile-nav-panel lg:hidden ${
+                isMenuOpen ? "mobile-nav-panel-open" : "mobile-nav-panel-closed"
+              }`}
+            >
+            <nav
+              aria-label="Mobile primary"
+              className="flex flex-col items-center gap-2 border-t border-line-soft pt-4 text-center"
+            >
+              {items.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="w-full rounded-panel-sm px-3 py-3 text-center text-sm font-semibold uppercase tracking-wide text-ink transition-colors duration-150 ease-fluid hover:bg-panel-soft"
+                  onClick={closeMenu}
+                >
+                  {item.label}
                   </a>
                 ))}
 
@@ -129,7 +159,7 @@ export function NavBar({ items, cta = defaultCta }: NavBarProps) {
                 </a>
               </nav>
             </div>
-          </div>
+          ) : null}
         </div>
       </div>
     </header>

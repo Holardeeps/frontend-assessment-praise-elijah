@@ -8,6 +8,28 @@ export type SortOption =
   | "rating-asc"
   | "rating-desc";
 
+// These control keys represent the logical filter groups we will render in
+// the UI, which is slightly different from the raw URL params because price
+// uses two params but appears as one combined control.
+export type ProductFilterControlKey =
+  | "search"
+  | "category"
+  | "priceRange"
+  | "sort";
+
+export type ProductFilterControlKind =
+  | "search"
+  | "select"
+  | "price-range"
+  | "sort";
+
+export type ProductFilterDefinition = {
+  key: ProductFilterControlKey;
+  label: string;
+  description: string;
+  kind: ProductFilterControlKind;
+};
+
 // This shape gives us one reusable way to talk about the optional price
 // bounds that will later power both filter parsing and UI form fields.
 export type PriceRange = {

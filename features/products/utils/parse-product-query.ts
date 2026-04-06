@@ -5,6 +5,7 @@ import {
   PRODUCT_SEARCH_PARAM_KEYS,
   PRODUCT_SORT_VALUES,
 } from "@/features/products/constants";
+import { normalizePriceRange } from "@/features/products/utils/normalize-price-range";
 import type {
   ProductQueryState,
   ProductSearchParamKey,
@@ -86,7 +87,11 @@ function normalizeText(value: string | undefined): string | undefined {
 }
 
 function parseSearchText(value: SearchParamValue) {
-  return getSingleSearchParamValue(value) ?? DEFAULT_PRODUCT_QUERY_STATE.search;
+  const searchText = getSingleSearchParamValue(value);
+
+  return searchText
+    ? searchText.toLowerCase()
+    : DEFAULT_PRODUCT_QUERY_STATE.search;
 }
 
 function parseCategory(value: SearchParamValue) {
@@ -133,20 +138,6 @@ function parseNonNegativeNumber(value: SearchParamValue): number | null {
   }
 
   return parsedNumber;
-}
-
-function normalizePriceRange(minPrice: number | null, maxPrice: number | null) {
-  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
-    return {
-      minPrice: maxPrice,
-      maxPrice: minPrice,
-    };
-  }
-
-  return {
-    minPrice,
-    maxPrice,
-  };
 }
 
 // This serializer will let later phases preserve and rebuild listing URLs from

@@ -3,3 +3,8 @@ export * from "./pagination";
 export * from "./build-products-href";
 export * from "./product-query-copy";
 export * from "./format-category-label";
+export * from "./product-filter-preview";
+export * from "./product-filter-query";
+export * from "./parse-price-filter-input";
+export * from "./get-active-product-filters";
+export * from "./normalize-price-range";

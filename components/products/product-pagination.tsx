@@ -41,20 +41,26 @@ export function ProductPagination({
         </div>
 
         <div className="flex flex-col gap-3 lg:items-end">
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+          <div className="flex items-center justify-between gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
             {hasPreviousPage ? (
               <Link
                 href={previousPageHref}
-                className="button-secondary w-full sm:min-w-35 sm:w-auto"
+                className="button-secondary min-h-11 min-w-11 px-0 sm:min-h-12 sm:min-w-35 sm:px-4"
               >
-                Previous
+                <span aria-hidden="true" className="text-base sm:hidden">
+                  ←
+                </span>
+                <span className="sr-only sm:not-sr-only">Previous</span>
               </Link>
             ) : (
               <span
                 aria-disabled="true"
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-line-soft bg-panel-soft px-4 text-sm font-semibold uppercase tracking-wide text-copy-soft opacity-70 sm:min-w-35 sm:w-auto"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line-soft bg-panel-soft px-0 text-sm font-semibold uppercase tracking-wide text-copy-soft opacity-70 sm:min-h-12 sm:min-w-35 sm:px-4"
               >
-                Previous
+                <span aria-hidden="true" className="text-base sm:hidden">
+                  ←
+                </span>
+                <span className="sr-only sm:not-sr-only">Previous</span>
               </span>
             )}
 
@@ -95,16 +101,22 @@ export function ProductPagination({
             {hasNextPage ? (
               <Link
                 href={nextPageHref}
-                className="button-primary w-full sm:min-w-35 sm:w-auto"
+                className="button-primary min-h-11 min-w-11 px-0 sm:min-h-12 sm:min-w-35 sm:px-4"
               >
-                Next
+                <span aria-hidden="true" className="text-base sm:hidden">
+                  →
+                </span>
+                <span className="sr-only sm:not-sr-only">Next</span>
               </Link>
             ) : (
               <span
                 aria-disabled="true"
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-navy px-4 text-sm font-semibold uppercase tracking-wide text-white opacity-55 sm:min-w-35 sm:w-auto"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-navy px-0 text-sm font-semibold uppercase tracking-wide text-white opacity-55 sm:min-h-12 sm:min-w-35 sm:px-4"
               >
-                Next
+                <span aria-hidden="true" className="text-base sm:hidden">
+                  →
+                </span>
+                <span className="sr-only sm:not-sr-only">Next</span>
               </span>
             )}
           </div>
