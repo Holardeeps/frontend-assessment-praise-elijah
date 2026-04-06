@@ -24,6 +24,14 @@ fix applied. Update this file whenever a real testing issue is found.
   Fix: compare normalized client values against the current query before
   calling `router.replace()`.
 
+- Duplicate filter navigations:
+  The search and price controls could apply the same href more than once in
+  development, which led to duplicate `/products` requests and made upstream
+  timeout noise appear worse than the real user-facing behavior.
+  Fix: added current-href and last-applied-href guards before calling
+  `router.replace()`, and aligned the select control with the full current
+  products href instead of only `/products`.
+
 - Dropdown menu rendering:
   The custom select options briefly rendered into the page flow instead of
   behaving like a proper overlay dropdown.

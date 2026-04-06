@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PRODUCT_FILTER_DEBOUNCE_MS } from "@/features/products/constants";
 import {
   buildProductsFilterHref,
+  buildProductsHref,
   normalizePriceRange,
   parsePriceFilterInput,
 } from "@/features/products/utils";
@@ -31,12 +32,14 @@ export function ProductPriceRangeInput({
   preview,
 }: ProductPriceRangeInputProps) {
   const router = useRouter();
+  const lastAppliedHrefRef = useRef<string | null>(null);
   const [minPriceText, setMinPriceText] = useState(() =>
     getInitialPriceValue(query.minPrice),
   );
   const [maxPriceText, setMaxPriceText] = useState(() =>
     getInitialPriceValue(query.maxPrice),
   );
+  const currentHref = buildProductsHref(query);
 
   // This keeps the two price fields acting like one shared filter, so the URL
   // is updated once per pause in typing instead of on every single keystroke.
@@ -59,13 +62,21 @@ export function ProductPriceRangeInput({
         maxPrice: normalizedRange.maxPrice,
       });
 
+      if (
+        nextHref === currentHref ||
+        lastAppliedHrefRef.current === nextHref
+      ) {
+        return;
+      }
+
+      lastAppliedHrefRef.current = nextHref;
       router.replace(nextHref, { scroll: false });
     }, PRODUCT_FILTER_DEBOUNCE_MS);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [maxPriceText, minPriceText, query, router]);
+  }, [currentHref, maxPriceText, minPriceText, query, router]);
 
   return (
     <article

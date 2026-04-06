@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 
 import { SelectMenu, type SelectMenuOption } from "@/components/ui/select-menu";
-import { buildProductsFilterHref } from "@/features/products/utils";
+import { buildProductsFilterHref, buildProductsHref } from "@/features/products/utils";
 import type { ProductQueryState } from "@/types/filters";
 
 type ProductFilterSelectProps = {
@@ -23,6 +23,7 @@ export function ProductFilterSelect({
 }: ProductFilterSelectProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const currentHref = buildProductsHref(query);
 
   // This keeps select-based filters using the same URL-first flow as search,
   // so every control updates the listing through the route state.
@@ -36,7 +37,7 @@ export function ProductFilterSelect({
             sort: (nextValue || null) as ProductQueryState["sort"],
           });
 
-    if (nextHref === pathname) {
+    if (nextHref === currentHref || nextHref === pathname) {
       return;
     }
 

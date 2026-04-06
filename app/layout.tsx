@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { League_Spartan } from "next/font/google";
+
+import { QueryProvider } from "@/components/providers/query-provider";
+
 import "./globals.css";
 
 // This font setup gives the whole app the same strong geometric voice
@@ -32,7 +35,11 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${leagueSpartan.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {/* This mounts the shared TanStack Query cache at the app shell so later
+            enhancement hooks can reuse one client-side cache across routes. */}
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

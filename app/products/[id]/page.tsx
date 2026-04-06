@@ -8,7 +8,10 @@ import { RelatedProducts } from "@/components/products/related-products";
 import { RelatedProductsSkeleton } from "@/components/products/related-products-skeleton";
 import { NavBar } from "@/components/shared/nav-bar";
 import { PRODUCT_FILTER_SECTION_ID } from "@/features/products/constants";
-import { resolveProductReturnHref } from "@/features/products/utils";
+import {
+  parseProductId,
+  resolveProductReturnHref,
+} from "@/features/products/utils";
 import { getProductById, ProductsApiError } from "@/lib/api/products";
 import type { Product, ProductDetailModel } from "@/types/product";
 
@@ -29,12 +32,6 @@ type ProductDetailPageProps = {
 const getCachedProductDetail = cache(async (productId: number) => {
   return getProductById(productId);
 });
-
-function parseProductId(value: string) {
-  const parsedValue = Number(value);
-
-  return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
-}
 
 function buildProductMetadata(product: Product): Metadata {
   const description =

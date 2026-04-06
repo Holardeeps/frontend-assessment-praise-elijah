@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { PRODUCT_FILTER_DEBOUNCE_MS } from "@/features/products/constants";
 import { useDebouncedValue } from "@/features/products/hooks/use-debounced-value";
-import { buildProductsFilterHref } from "@/features/products/utils";
+import { buildProductsFilterHref, buildProductsHref } from "@/features/products/utils";
 import { useUiStore } from "@/store/use-ui-store";
 import type { ProductQueryState } from "@/types/filters";
 
@@ -16,11 +16,13 @@ type ProductSearchInputProps = {
 export function ProductSearchInput({ query }: ProductSearchInputProps) {
   const router = useRouter();
   const addRecentSearch = useUiStore((state) => state.addRecentSearch);
+  const lastAppliedHrefRef = useRef<string | null>(null);
   const [searchText, setSearchText] = useState(() => query.search);
   const debouncedSearchText = useDebouncedValue(
     searchText,
     PRODUCT_FILTER_DEBOUNCE_MS,
   );
+  const currentHref = buildProductsHref(query);
 
   // This applies the debounced search value back into the URL so the server
   // page remains the source of truth for the listing results.
@@ -35,12 +37,20 @@ export function ProductSearchInput({ query }: ProductSearchInputProps) {
       search: normalizedSearchText,
     });
 
+    if (
+      nextHref === currentHref ||
+      lastAppliedHrefRef.current === nextHref
+    ) {
+      return;
+    }
+
     if (normalizedSearchText.length > 0) {
       addRecentSearch(normalizedSearchText);
     }
 
+    lastAppliedHrefRef.current = nextHref;
     router.replace(nextHref, { scroll: false });
-  }, [addRecentSearch, debouncedSearchText, query, router]);
+  }, [addRecentSearch, currentHref, debouncedSearchText, query, router]);
 
   return (
     <label className="field-shell">

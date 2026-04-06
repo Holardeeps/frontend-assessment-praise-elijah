@@ -23,3 +23,7 @@ export type ProductCategorySlug = ProductCategory["slug"];
 export type ProductCategoryList = ProductCategorySlug[];
 
 export type DummyJsonProductsResponse = DummyJsonCollectionResponse<Product>;
+
+export type RelatedProductsApiResponse = {
+  products: Product[];
+};

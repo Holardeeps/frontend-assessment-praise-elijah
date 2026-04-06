@@ -75,6 +75,7 @@ describe("Product filters", () => {
       "/products?search=lap&category=smartphones&sort=price-desc",
       { scroll: false },
     );
+    expect(mockReplace).toHaveBeenCalledTimes(1);
   });
 
   it("updates the URL immediately when a sort option is selected", async () => {
