@@ -15,6 +15,8 @@ TradeLens is a product catalog explorer built with Next.js, TypeScript, Tailwind
 - the pagination next button now warms the next catalog page through TanStack Query on hover or focus
 - the catalog results page now supports a persisted grid / compact view mode
 - recent searches are now saved locally and can be reused from the filter bar
+- Cloudflare static asset headers now mark `/_next/static/*` as immutable for one year
+- the Cloudflare runtime now includes a durable revalidation queue for time-based cache refreshes
 - URL query state already supports search, category, price, sort, and page parsing
 - catalog cards now include live product imagery with graceful fallback
 - numbered pagination plus previous / next navigation is working
@@ -51,7 +53,7 @@ npm run preview
 
 ## Environment
 
-The repo includes [.env.example](/home/praise/Desktop/WORK/trade-lens/.env.example).
+The repo includes [.env.example](/trade-lens/.env.example).
 
 Current keys:
 
@@ -72,6 +74,21 @@ lib/
 tests/
 types/
 ```
+
+## Cache Strategy
+
+- Product listing data uses `cache: "force-cache"` with `next.revalidate = 180` so the catalog stays reasonably fresh without making every request fully dynamic.
+- Product detail data uses the same `180` second revalidation window, which keeps detail pages responsive while still allowing pricing and stock changes to refresh on a short cadence.
+- Product categories use a longer `3600` second revalidation window because that taxonomy changes less often than pricing or availability.
+- Internal JSON enhancement routes for `/api/products` and `/api/products/[id]/related` also use `revalidate = 180` so TanStack Query prefetches stay aligned with the server-rendered catalog and detail views.
+- Immutable build assets under `/_next/static/*` are marked with `Cache-Control: public,max-age=31536000,immutable` through [public/\_headers](/home/praise/Desktop/WORK/trade-lens/public/_headers), matching Cloudflare/OpenNext guidance for static assets.
+- OpenNext is configured with an R2-backed incremental cache and a durable revalidation queue, so time-based cache refreshes are coordinated in the Cloudflare runtime instead of relying on request-by-request origin work alone.
+
+## Cache Trade-Offs
+
+- I kept the listing and detail routes on short revalidation windows instead of forcing them fully static because filters, availability, and catalog detail pages should stay meaningfully fresh.
+- I did not add a custom `x-cache-status` response header yet. In the current OpenNext Cloudflare setup, exposing that safely would require worker-level response instrumentation, and I did not want to trade runtime stability for a bonus-only verification signal.
+- Categories are cached longer because they are structurally stable, while listing and detail data are treated as operational content that changes more frequently.
 
 ## Notes
 

@@ -21,6 +21,24 @@
     }
   ],
 
+  "durable_objects": {
+    "bindings": [
+      {
+        // This queue keeps time-based revalidations deduplicated and aligned
+        // with the OpenNext queue override configured in open-next.config.ts.
+        "name": "NEXT_CACHE_DO_QUEUE",
+        "class_name": "DOQueueHandler"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DOQueueHandler"]
+    }
+  ],
+
   "r2_buckets": [
     {
       // This bucket backs the incremental cache configured in
