@@ -1,3 +1,4 @@
+import { buildProductDetailHref } from "@/features/products/utils";
 import type { ProductListResponse } from "@/types/product";
 import { formatInteger } from "@/lib/utils/format-number";
 
@@ -32,7 +33,11 @@ export function ProductsResults({ productList }: ProductsResultsProps) {
         {productList.products.length > 0 ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {productList.products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                href={buildProductDetailHref(product.id, productList.query)}
+              />
             ))}
           </div>
         ) : (

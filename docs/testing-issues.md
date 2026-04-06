@@ -15,8 +15,8 @@ fix applied. Update this file whenever a real testing issue is found.
 - External product API timeouts:
   DummyJSON occasionally timed out and broke the `/products` page with a raw
   runtime error.
-  Fix: added fetch retries, time-based revalidation, and a friendly service
-  unavailable state for listing failures.
+  Fix: added fetch retries, explicit per-request timeouts, time-based
+  revalidation, and a friendly service unavailable state for listing failures.
 
 - Filter rerender loop:
   The price filter could keep triggering route replacement even when the

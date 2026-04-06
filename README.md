@@ -6,9 +6,11 @@ TradeLens is a product catalog explorer built with Next.js, TypeScript, Tailwind
 
 - `/` redirects to `/products`
 - `/products` is server-rendered and fetches live product data
+- `/products/[id]` now has a working detail route foundation
 - URL query state already supports search, category, price, sort, and page parsing
 - catalog cards now include live product imagery with graceful fallback
 - numbered pagination plus previous / next navigation is working
+- loading, error, and empty states are now in place for `/products`
 - Vitest + React Testing Library are set up and running
 
 ## Run Locally
@@ -65,6 +67,6 @@ types/
 
 ## Notes
 
-- The product data depends on an external API, so occasional upstream timeouts can happen during development.
-- Friendly loading, error, and empty-state hardening are planned in upcoming phases.
+- The product data depends on an external API, so occasional upstream slowdowns can still happen during development.
+- The `/products` route now fails more gracefully with retries, timeouts, and product-facing fallback states.
 - Deployment and final assessment notes will be added once the app is feature-complete.

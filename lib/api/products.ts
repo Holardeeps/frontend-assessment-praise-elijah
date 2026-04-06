@@ -25,6 +25,7 @@ type ProductsApiRequestOptions = {
   searchParams?: ProductsApiSearchParams;
   init?: ProductsApiFetchInit;
   retries?: number;
+  timeoutMs?: number;
 };
 
 type ProductListRequestOptions = {
@@ -35,6 +36,7 @@ type ProductListRequestOptions = {
 const DEFAULT_PRODUCTS_API_BASE_URL = "https://dummyjson.com";
 const DEFAULT_PRODUCTS_API_RETRIES = 2;
 const DEFAULT_PRODUCTS_API_RETRY_DELAY_MS = 300;
+const DEFAULT_PRODUCTS_API_TIMEOUT_MS = 5000;
 const PRODUCT_LIST_REVALIDATE_SECONDS = 180;
 const PRODUCT_CATEGORIES_REVALIDATE_SECONDS = 3600;
 
@@ -119,11 +121,20 @@ function isRetryableProductsApiError(error: unknown) {
     return error.status >= 500 || error.status === 429;
   }
 
+  if (error instanceof Error) {
+    if (
+      error.name === "TimeoutError" ||
+      (error.name === "AbortError" && /timed out/i.test(error.message))
+    ) {
+      return true;
+    }
+  }
+
   if (!(error instanceof TypeError)) {
     return false;
   }
 
-  const directCode = getProductsApiErrorCode(error.cause);
+  const directCode = getProductsApiErrorCode(error.cause) ?? getProductsApiErrorCode(error);
 
   if (directCode) {
     return [
@@ -161,6 +172,46 @@ function waitForProductsApiRetry(delayMs: number) {
   });
 }
 
+function createProductsTimeoutError(timeoutMs: number) {
+  const timeoutError = new Error(
+    `The product service did not respond within ${timeoutMs}ms.`,
+  );
+
+  timeoutError.name = "TimeoutError";
+
+  return timeoutError;
+}
+
+function createProductsRequestSignal(
+  signal: AbortSignal | null | undefined,
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  const abortFromSignal = () => {
+    controller.abort(signal?.reason);
+  };
+  const timeoutId = setTimeout(() => {
+    controller.abort(createProductsTimeoutError(timeoutMs));
+  }, timeoutMs);
+
+  if (signal?.aborted) {
+    abortFromSignal();
+  } else if (signal) {
+    signal.addEventListener("abort", abortFromSignal, { once: true });
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timeoutId);
+
+      if (signal) {
+        signal.removeEventListener("abort", abortFromSignal);
+      }
+    },
+  };
+}
+
 // This resolves the external API base once in a predictable way: use the env
 // override when present, otherwise fall back to DummyJSON's public host.
 export function getProductsApiBaseUrl() {
@@ -194,14 +245,22 @@ export function buildProductsApiUrl(
 // path and leaves room for Next-specific fetch options like revalidate later on.
 export async function fetchProductsApi<TResponse>(
   pathname: string,
-  { searchParams, init, retries = DEFAULT_PRODUCTS_API_RETRIES }: ProductsApiRequestOptions = {},
+  {
+    searchParams,
+    init,
+    retries = DEFAULT_PRODUCTS_API_RETRIES,
+    timeoutMs = DEFAULT_PRODUCTS_API_TIMEOUT_MS,
+  }: ProductsApiRequestOptions = {},
 ): Promise<TResponse> {
   const url = buildProductsApiUrl(pathname, searchParams);
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
+    const { signal, cleanup } = createProductsRequestSignal(init?.signal, timeoutMs);
+
     try {
       const response = await fetch(url, {
         ...init,
+        signal,
         headers: {
           Accept: "application/json",
           ...init?.headers,
@@ -234,6 +293,8 @@ export async function fetchProductsApi<TResponse>(
       }
 
       await waitForProductsApiRetry(DEFAULT_PRODUCTS_API_RETRY_DELAY_MS * (attempt + 1));
+    } finally {
+      cleanup();
     }
   }
 

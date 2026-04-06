@@ -30,11 +30,16 @@ vi.mock("next/image", () => ({
 
 describe("ProductCard", () => {
   it("renders the main product content and metadata", () => {
-    renderWithProviders(<ProductCard product={createTestProduct()} />);
+    renderWithProviders(
+      <ProductCard product={createTestProduct()} href="/products/101" />,
+    );
 
     expect(
       screen.getByRole("img", { name: /trade monitor display/i }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /trade monitor display/i }),
+    ).toHaveAttribute("href", "/products/101");
     expect(
       screen.getByRole("heading", { name: /trade monitor display/i }),
     ).toBeInTheDocument();
@@ -55,6 +60,7 @@ describe("ProductCard", () => {
           images: [],
           thumbnail: "",
         })}
+        href="/products/101"
       />,
     );
 

@@ -8,3 +8,4 @@ export * from "./product-filter-query";
 export * from "./parse-price-filter-input";
 export * from "./get-active-product-filters";
 export * from "./normalize-price-range";
+export * from "./product-detail-navigation";
