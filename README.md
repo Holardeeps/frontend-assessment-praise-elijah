@@ -9,6 +9,8 @@ TradeLens is a product catalog explorer built with Next.js, TypeScript, Tailwind
 - `/products/[id]` now has a working detail route foundation
 - product detail pages now include dynamic metadata and breadcrumb navigation
 - related products now stream into the detail page behind a Suspense fallback
+- related products now hydrate into TanStack Query so repeat detail views can reuse that client cache
+- an internal products JSON route now exists for client-side catalog enhancements
 - an internal related-products JSON route now exists for client-side enhancements
 - the catalog results page now supports a persisted grid / compact view mode
 - recent searches are now saved locally and can be reused from the filter bar
