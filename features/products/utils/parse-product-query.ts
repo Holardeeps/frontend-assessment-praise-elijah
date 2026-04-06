@@ -110,9 +110,9 @@ function parsePage(value: SearchParamValue): number {
     return DEFAULT_PRODUCT_PAGE;
   }
 
-  const parsedPage = Number.parseInt(page, 10);
+  const parsedPage = Number(page);
 
-  if (!Number.isFinite(parsedPage)) {
+  if (!Number.isInteger(parsedPage)) {
     return DEFAULT_PRODUCT_PAGE;
   }
 

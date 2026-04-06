@@ -52,12 +52,22 @@
   --color-page: var(--surface-tint);
   --color-panel: var(--surface-base);
   --color-panel-soft: var(--surface-muted);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
   --color-ink: var(--brand-ink);
   --color-navy: var(--brand-navy);
   --color-cyan: var(--brand-cyan);
+  --color-cyan-deep: var(--brand-cyan-deep);
   --color-mint: var(--brand-mint);
   --color-copy: var(--copy-base);
   --color-copy-soft: var(--copy-soft);
+  --shadow-panel: var(--shadow-card);
+  --shadow-panel-floating: var(--shadow-floating);
+  --radius-panel-sm: var(--radius-sm);
+  --radius-panel-md: var(--radius-md);
+  --radius-panel-lg: var(--radius-lg);
+  --radius-nav-shell: calc(var(--radius-lg) + 0.25rem);
+  --ease-fluid: var(--ease-standard);
   --font-sans: var(--font-league-spartan);
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -288,6 +298,11 @@
       transform var(--motion-fast) var(--ease-standard);
   }
 
+  .button-primary,
+  .button-secondary {
+    width: fit-content;
+  }
+
   .button-primary {
     background: var(--brand-cyan);
     color: var(--brand-navy);
@@ -308,6 +323,11 @@
   .button-secondary:hover {
     border-color: rgba(2, 2, 51, 0.24);
     transform: translateY(-1px);
+  }
+
+  .button-primary:focus-visible,
+  .button-secondary:focus-visible {
+    outline-offset: 2px;
   }
 
   .pill {
