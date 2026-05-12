@@ -22,22 +22,7 @@ export function ProductActiveFilters({
   const activeFilters = getActiveProductFilters(query);
 
   if (activeFilters.length === 0) {
-    return (
-      <div
-        className={[
-          "rounded-panel-md border border-dashed border-line-soft bg-panel-soft px-4 py-3",
-          className ?? "",
-        ].join(" ")}
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        <p className="metric-kicker">Current view</p>
-        <p role="status" className="mt-2 text-sm leading-6 text-copy-soft">
-          No filters are active right now, so this view is showing the full
-          catalog.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   const clearFiltersHref = `${buildProductsHref(DEFAULT_PRODUCT_QUERY_STATE)}#${PRODUCT_FILTER_SECTION_ID}`;

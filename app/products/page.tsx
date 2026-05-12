@@ -1,6 +1,7 @@
+import { HydrationBoundary, dehydrate } from "@tanstack/react-query";
+
 import {
   buildProductsHref,
-  getProductQuerySummary,
   parseProductQuery,
 } from "@/features/products/utils";
 import {
@@ -9,6 +10,9 @@ import {
   ProductsApiError,
 } from "@/lib/api/products";
 import { formatInteger } from "@/lib/utils/format-number";
+import { getAverageRating } from "@/lib/utils/products-stats";
+import { createTradeLensQueryClient } from "@/lib/query/query-client";
+import { productQueryKeys } from "@/lib/query/product-query-keys";
 import { ProductsServiceUnavailable } from "@/components/products/products-service-unavailable";
 import { ProductFiltersShell } from "@/components/products/product-filters-shell";
 import { NavBar } from "@/components/shared/nav-bar";
@@ -80,16 +84,13 @@ export default async function ProductsPage({
   }
 
   const categories = await categoriesPromise;
-  const averageRating =
-    productList.products.length > 0
-      ? (
-          productList.products.reduce(
-            (total, product) => total + product.rating,
-            0,
-          ) / productList.products.length
-        ).toFixed(1)
-      : "0.0";
-  const querySummary = getProductQuerySummary(productList.query);
+  const averageRating = getAverageRating(productList.products);
+
+  const queryClient = createTradeLensQueryClient();
+  queryClient.setQueryData(
+    productQueryKeys.listing(productList.query),
+    productList,
+  );
 
   return (
     <main id="main-content" className="pb-14 sm:pb-16 lg:pb-20">
@@ -104,7 +105,6 @@ export default async function ProductsPage({
           currentPageLabel={`${productList.page}/${Math.max(productList.totalPages, 1)}`}
           averageRating={averageRating}
           categoryCount={formatInteger(categories.length)}
-          querySummary={querySummary}
         />
 
         <ProductFiltersShell
@@ -115,7 +115,9 @@ export default async function ProductsPage({
 
         <ProductCategoryStrip categories={categories} />
 
-        <ProductsResults productList={productList} />
+        <HydrationBoundary state={dehydrate(queryClient)}>
+          <ProductsResults query={productList.query} />
+        </HydrationBoundary>
       </section>
     </main>
   );

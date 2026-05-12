@@ -1,6 +1,12 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+
 import { buildProductDetailHref } from "@/features/products/utils";
-import type { ProductListResponse } from "@/types/product";
+import { fetchProductListQuery } from "@/lib/query/products-list";
+import { productQueryKeys } from "@/lib/query/product-query-keys";
 import { formatInteger } from "@/lib/utils/format-number";
+import type { ProductQueryState } from "@/types/filters";
 
 import { ProductCard } from "./product-card";
 import { ProductsEmptyState } from "./products-empty-state";
@@ -12,10 +18,19 @@ import {
 } from "./product-results-view-mode";
 
 type ProductsResultsProps = {
-  productList: ProductListResponse;
+  query: ProductQueryState;
 };
 
-export function ProductsResults({ productList }: ProductsResultsProps) {
+export function ProductsResults({ query }: ProductsResultsProps) {
+  const { data: productList } = useQuery({
+    queryKey: productQueryKeys.listing(query),
+    queryFn: () => fetchProductListQuery(query),
+  });
+
+  if (!productList) {
+    return null;
+  }
+
   return (
     <section
       id="results"

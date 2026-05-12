@@ -8,7 +8,7 @@ type ProductsStatePanelProps = {
   details?: ReactNode;
   variant?: "default" | "dashed";
   className?: string;
-  headingLevel?: "h2" | "h3";
+  headingLevel?: "h1" | "h2" | "h3";
 };
 
 export function ProductsStatePanel({

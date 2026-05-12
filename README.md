@@ -93,6 +93,29 @@ The app applies more than the minimum required optimization set:
 - upstream data fetches use retries, explicit timeouts, and stale-on-error
   fallback to reduce the impact of transient API failures
 
+## - Cloudflare: B
+
+### B-1 Cloudflare Workers caching
+
+- OpenNext Cloudflare adapter configured with R2 incremental cache and durable
+  revalidation queue
+- immutable static asset caching added through `public/_headers`
+- attempted a small worker-level cache-status mirror in
+  [worker.mjs](./worker.mjs) to surface listing cache behavior
+- deployed `/products` responses did not expose `x-cache-status` publicly, so
+  that verification part remains incomplete
+
+### B-2 React Streaming with Suspense
+
+- related products on the detail page stream separately behind Suspense, so the
+  primary product detail content renders first
+
+### B-3 Accessibility audit
+
+- accessibility fixes were applied across landmarks, labels, keyboard flow,
+  focus handling, live regions, contrast, and reduced motion
+- local Lighthouse accessibility score reached `100` on both tested pages
+
 ## Testing and QA
 
 Automated checks used:

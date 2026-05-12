@@ -48,6 +48,42 @@ export function ProductFiltersShell({
     (filter) => filter.key === "priceRange",
   );
 
+  // The same filter controls render inline for desktop and inside the mobile
+  // Radix dialog. JSX is duplicated in the React tree but each input owns its
+  // own state via useId, and only the visible breakpoint receives interaction.
+  const filterControls = (
+    <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,1fr)_minmax(0,1fr)]">
+      <ProductSearchInput key={query.search} query={query} />
+
+      <ProductFilterSelect
+        filterKey="category"
+        label="Category"
+        options={categoryOptions}
+        query={query}
+        value={query.category ?? ""}
+      />
+
+      <ProductFilterSelect
+        filterKey="sort"
+        label="Sort order"
+        options={sortOptions}
+        query={query}
+        value={query.sort ?? ""}
+      />
+
+      {priceFilter ? (
+        <ProductPriceRangeInput
+          key={`${query.minPrice ?? "none"}-${query.maxPrice ?? "none"}`}
+          className="md:col-span-2 xl:col-span-3"
+          label={priceFilter.label}
+          description={priceFilter.description}
+          preview={filterPreviews.priceRange}
+          query={query}
+        />
+      ) : null}
+    </div>
+  );
+
   return (
     <section
       id={PRODUCT_FILTER_SECTION_ID}
@@ -62,38 +98,13 @@ export function ProductFiltersShell({
           </h2>
         </div>
 
-        <ProductFiltersPanel activeFilterCount={activeFilterCount}>
-          <div className="grid items-start gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,1fr)_minmax(0,1fr)]">
-            <ProductSearchInput key={query.search} query={query} />
+        <div className="mt-5 hidden lg:block">{filterControls}</div>
 
-            <ProductFilterSelect
-              filterKey="category"
-              label="Category"
-              options={categoryOptions}
-              query={query}
-              value={query.category ?? ""}
-            />
-
-            <ProductFilterSelect
-              filterKey="sort"
-              label="Sort order"
-              options={sortOptions}
-              query={query}
-              value={query.sort ?? ""}
-            />
-
-            {priceFilter ? (
-              <ProductPriceRangeInput
-                key={`${query.minPrice ?? "none"}-${query.maxPrice ?? "none"}`}
-                className="md:col-span-2 xl:col-span-3"
-                label={priceFilter.label}
-                description={priceFilter.description}
-                preview={filterPreviews.priceRange}
-                query={query}
-              />
-            ) : null}
-          </div>
-        </ProductFiltersPanel>
+        <div className="lg:hidden">
+          <ProductFiltersPanel activeFilterCount={activeFilterCount}>
+            {filterControls}
+          </ProductFiltersPanel>
+        </div>
 
         <ProductFilterContext query={query} />
       </div>

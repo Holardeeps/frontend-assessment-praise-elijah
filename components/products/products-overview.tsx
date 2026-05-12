@@ -3,7 +3,6 @@ type ProductsOverviewProps = {
   currentPageLabel: string;
   averageRating: string;
   categoryCount: string;
-  querySummary: string;
 };
 
 export function ProductsOverview({
@@ -11,7 +10,6 @@ export function ProductsOverview({
   currentPageLabel,
   averageRating,
   categoryCount,
-  querySummary,
 }: ProductsOverviewProps) {
   return (
     <section
@@ -71,13 +69,6 @@ export function ProductsOverview({
           </dd>
         </div>
       </dl>
-
-      <div className="mt-6 rounded-panel-md border border-line-soft bg-panel px-4 py-4 hidden">
-        <p className="metric-kicker">View summary</p>
-        <p className="mt-3 wrap-break-word text-sm leading-6 text-ink">
-          {querySummary}
-        </p>
-      </div>
     </section>
   );
 }

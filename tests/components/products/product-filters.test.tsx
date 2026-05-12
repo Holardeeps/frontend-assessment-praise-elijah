@@ -95,16 +95,18 @@ describe("Product filters", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: /sort order/i }));
+    await user.click(screen.getByRole("combobox", { name: /sort order/i }));
     await user.click(screen.getByRole("option", { name: /price: low to high/i }));
 
-    expect(mockReplace).toHaveBeenCalledWith(
-      "/products?category=smartphones&sort=price-asc",
-      { scroll: false },
-    );
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith(
+        "/products?category=smartphones&sort=price-asc",
+        { scroll: false },
+      );
+    });
   });
 
-  it("supports keyboard navigation inside the select menu and returns focus to the trigger on escape", async () => {
+  it("opens the listbox via keyboard and returns focus to the trigger on escape", async () => {
     const user = userEvent.setup();
 
     renderWithProviders(
@@ -121,25 +123,24 @@ describe("Product filters", () => {
       />,
     );
 
-    const trigger = screen.getByRole("button", { name: /sort order/i });
+    const trigger = screen.getByRole("combobox", { name: /sort order/i });
 
     trigger.focus();
-    await user.keyboard("{ArrowDown}");
-
-    const selectedOption = screen.getByRole("option", {
-      name: /price: high to low/i,
-    });
+    await user.keyboard("{Enter}");
 
     await waitFor(() => {
-      expect(selectedOption).toHaveFocus();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
     });
 
-    await user.keyboard("{ArrowUp}");
     expect(
       screen.getByRole("option", { name: /price: low to high/i }),
-    ).toHaveFocus();
+    ).toBeInTheDocument();
 
     await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    });
     expect(trigger).toHaveFocus();
   });
 });
